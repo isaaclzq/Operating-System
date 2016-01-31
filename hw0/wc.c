@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-
 void count(char* file){
     FILE* filePointer = fopen(file, "r");
     if (!filePointer){
