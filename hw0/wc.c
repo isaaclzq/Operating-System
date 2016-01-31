@@ -46,6 +46,7 @@ void countInput(){
             num_word++;
         }
     }
+    
     num_character += len;
     printf("    %d    %d    %d\n", num_line, num_word, num_character); 
     free(input);
