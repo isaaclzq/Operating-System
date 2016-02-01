@@ -1,0 +1,15 @@
+1. What file format is used for this binary? And what architecture is it compiled for?
+elf64-x86-64. i386:x86-64;
+
+2. What are some of the names of segment/sections you find?
+.interp
+.note.ABI-tag
+.note.gnu.build-id
+.gnu.hash
+.dynsym
+
+3. What segment/section contains main (the function) and what is the address of main? (It should be the same as what you saw in gdb)
+.text
+
+4. Do you see the stack segment anywhere? What about the heap? Explain
+No, because they are simply stored in memory created by chaning the virtual address space via some calls.
