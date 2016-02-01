@@ -1,12 +1,34 @@
 1. Use objdump with the -D flag on the map executable. Which of the addresses from the output of running ./map are defined in the executable, and which segment/section is each defined in?
+main, recur, static data. 
+main is defined in .text
+recur is defined in .text
+static data is defined in .data
 
 2. Make a list of the important segments, and what they are used for (look up their names on the Internet if you don’t know).
+interp segment: holds the path name of a program interpreter.
+data segment: holds initialized data that contribute to the program's memory image.
+text segment: holds instructions
+strtab segment: holds strings
+rodata segment: holds read-only data
+preinit_array: holds an array of function pointers that contributes to a single pre-initialization array for the executable or shared object containing the section
+line: holds line number information for symbolic debugging
+init: holds executable instructions that contribute to the process initialization code.
+dynamic: holds dynamic linking information.
+bss: This section holds uninitialized data that contribute to the program's memory image.
 
 3. What direction is the stack growing in?
 downward.
 
 4. How large is the stack frame for each recursive call?
+the size of each stack frame is 48 bits
 
 5. Where is the heap? What direction is it growing in?
+heap is located above the uninitialized data region, growing upward toward the stack.
 
 6. Are the two malloc()ed memory areas contiguous? (e.g. is there any extra space between their addresses?)
+No, they are not contiguous.
+
+
+
+
+
