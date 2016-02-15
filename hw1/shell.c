@@ -9,7 +9,6 @@
 #include <sys/wait.h>
 #include <termios.h>
 #include <unistd.h>
-
 #include "tokenizer.h"
 
 /* Whether the shell is connected to an actual terminal or not. */
@@ -26,6 +25,8 @@ pid_t shell_pgid;
 
 int cmd_exit(struct tokens *tokens);
 int cmd_help(struct tokens *tokens);
+int cmd_pwd(struct tokens *tokens);
+int cmd_cd(struct tokens *tokens);
 
 /* Built-in command functions take token array (see parse.h) and return int */
 typedef int cmd_fun_t(struct tokens *tokens);
@@ -40,6 +41,8 @@ typedef struct fun_desc {
 fun_desc_t cmd_table[] = {
   {cmd_help, "?", "show this help menu"},
   {cmd_exit, "exit", "exit the command shell"},
+  {cmd_pwd, "pwd", "print current working directory"},
+  {cmd_cd, "cd", "change directory"},
 };
 
 /* Prints a helpful description for the given command */
@@ -52,6 +55,19 @@ int cmd_help(struct tokens *tokens) {
 /* Exits this shell */
 int cmd_exit(struct tokens *tokens) {
   exit(0);
+}
+
+int cmd_pwd(struct tokens *tokens) {
+  char my_cwd[2048];
+  getcwd(my_cwd, 2048);
+  printf("%s\n", my_cwd);
+  return 1;
+}
+
+int cmd_cd(struct tokens *tokens) {
+  char *dir = tokens_get_token(tokens, 1);
+  chdir(dir);
+  return 1; 
 }
 
 /* Looks up the built-in command, if it exists. */
@@ -108,9 +124,20 @@ int main(int argc, char *argv[]) {
     if (fundex >= 0) {
       cmd_table[fundex].fun(tokens);
     } else {
-      /* REPLACE this to run commands as programs. */
-      fprintf(stdout, "This shell doesn't know how to run programs.\n");
-    }
+      int status, my_pid;
+      my_pid = fork();
+      if (my_pid == 0) {
+        char *command = tokens_get_token(tokens, 0);
+        char *file = tokens_get_token(tokens, 1);
+        execl(command, command, file, NULL);  
+      } 
+      else if (my_pid < 0) {
+        exit(EXIT_FAILURE);
+      } 
+      else {
+        waitpid(my_pid, &status, 0);
+        }
+      }
 
     if (shell_is_interactive)
       /* Please only print shell prompts when standard input is not a tty */
