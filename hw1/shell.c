@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include "tokenizer.h"
 #include <sys/stat.h>
+#include <fcntl.h>
 
 /* Whether the shell is connected to an actual terminal or not. */
 bool shell_is_interactive;
@@ -125,14 +126,41 @@ int main(int argc, char *argv[]) {
     if (fundex >= 0) {
       cmd_table[fundex].fun(tokens);
     } else {
-      int status, my_pid;
+      int status, my_pid, newfd;
       char *name = "PATH";
       my_pid = fork();
       if (my_pid == 0) {
-        char *command = tokens_get_token(tokens, 0);
-        char *file = tokens_get_token(tokens, 1);
-        char *const argList[] = {command, file, NULL};
-        int command_check = execv(command, argList);
+        if (tokens_get_length(tokens) > 2) {
+          char *redir_out = ">";
+          char *redir_in = "<";
+          for (int x = 0; x < tokens_get_length(tokens); x++){
+            if (strcmp(tokens_get_token(tokens, x), redir_out) == 0){
+              if ((newfd = open(tokens_get_token(tokens, x+1), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)) < 0) {
+                perror(tokens_get_token(tokens, x+1));
+                exit(1);
+              }
+              dup2(newfd, 1);
+              char *command = tokens_get_token(tokens, 0);
+              char *file = tokens_get_token(tokens, 1);
+              char *const argList[] = {command, file, NULL};
+              execv(command, argList);
+            }
+            else if (strcmp(tokens_get_token(tokens, x), redir_in) == 0) {
+              FILE *fp;
+              char line[80];
+              fp = fopen(tokens_get_token(tokens, x+1), "r");
+              fgets(line, 80, fp);
+              char *command = tokens_get_token(tokens, 0);
+              char *arg = tokens_get_token(tokens, 1);
+              char *const argList[] = {command, arg, line, NULL};
+              execv(command, argList);
+            }
+          }
+        }
+          char *command = tokens_get_token(tokens, 0);
+          char *file = tokens_get_token(tokens, 1);
+          char *const argList[] = {command, file, NULL};
+          int command_check = execv(command, argList);  
         if (command_check == -1){
           char *path = getenv(name);
           char *delim = ":";
