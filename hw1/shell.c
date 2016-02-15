@@ -10,6 +10,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include "tokenizer.h"
+#include <sys/stat.h>
 
 /* Whether the shell is connected to an actual terminal or not. */
 bool shell_is_interactive;
@@ -125,11 +126,33 @@ int main(int argc, char *argv[]) {
       cmd_table[fundex].fun(tokens);
     } else {
       int status, my_pid;
+      char *name = "PATH";
       my_pid = fork();
       if (my_pid == 0) {
         char *command = tokens_get_token(tokens, 0);
         char *file = tokens_get_token(tokens, 1);
-        execl(command, command, file, NULL);  
+        char *const argList[] = {command, file, NULL};
+        int command_check = execv(command, argList);
+        if (command_check == -1){
+          char *path = getenv(name);
+          char *delim = ":";
+          char *new_delim = "/";
+          char *addr = strtok(path, delim);
+          struct stat st;
+          while (addr != NULL){
+            char abs_path[2048];
+            memset(&abs_path[0], 0, sizeof(abs_path));
+            strncpy(abs_path, addr, strlen(addr));
+            strncat(abs_path, new_delim, strlen(new_delim));
+            strncat(abs_path, command, strlen(command));
+            int result = stat(abs_path, &st);
+            if (result == 0) {
+              char *const argList[] = {command, file, NULL};
+              execv(abs_path, argList);
+            }
+            addr = strtok(NULL, delim);
+          }
+        }
       } 
       else if (my_pid < 0) {
         exit(EXIT_FAILURE);
