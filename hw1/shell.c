@@ -126,42 +126,18 @@ int main(int argc, char *argv[]) {
     if (fundex >= 0) {
       cmd_table[fundex].fun(tokens);
     } else {
-      int status, my_pid, newfd;
+      int status, my_pid, newfd, check_command;
       char *name = "PATH";
-      my_pid = fork();
+      char *space = " ";
+            my_pid = fork();
       if (my_pid == 0) {
-        if (tokens_get_length(tokens) > 2) {
-          char *redir_out = ">";
-          char *redir_in = "<";
-          for (int x = 0; x < tokens_get_length(tokens); x++){
-            if (strcmp(tokens_get_token(tokens, x), redir_out) == 0){
-              if ((newfd = open(tokens_get_token(tokens, x+1), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)) < 0) {
-                perror(tokens_get_token(tokens, x+1));
-                exit(1);
-              }
-              dup2(newfd, 1);
-              char *command = tokens_get_token(tokens, 0);
-              char *file = tokens_get_token(tokens, 1);
-              char *const argList[] = {command, file, NULL};
-              execv(command, argList);
-            }
-            else if (strcmp(tokens_get_token(tokens, x), redir_in) == 0) {
-              FILE *fp;
-              char line[80];
-              fp = fopen(tokens_get_token(tokens, x+1), "r");
-              fgets(line, 80, fp);
-              char *command = tokens_get_token(tokens, 0);
-              char *arg = tokens_get_token(tokens, 1);
-              char *const argList[] = {command, arg, line, NULL};
-              execv(command, argList);
-            }
-          }
+        char *parmList[tokens_get_length(tokens)+1];
+        for (int x = 0; x < tokens_get_length(tokens); x++){
+          parmList[x] = tokens_get_token(tokens, x);
         }
-          char *command = tokens_get_token(tokens, 0);
-          char *file = tokens_get_token(tokens, 1);
-          char *const argList[] = {command, file, NULL};
-          int command_check = execv(command, argList);  
-        if (command_check == -1){
+        parmList[tokens_get_length(tokens)] = NULL;
+        check_command = execv(tokens_get_token(tokens, 0), parmList);
+        if (check_command == -1){
           char *path = getenv(name);
           char *delim = ":";
           char *new_delim = "/";
@@ -172,11 +148,11 @@ int main(int argc, char *argv[]) {
             memset(&abs_path[0], 0, sizeof(abs_path));
             strncpy(abs_path, addr, strlen(addr));
             strncat(abs_path, new_delim, strlen(new_delim));
-            strncat(abs_path, command, strlen(command));
+            strncat(abs_path, tokens_get_token(tokens, 0), strlen(tokens_get_token(tokens, 0)));
             int result = stat(abs_path, &st);
             if (result == 0) {
-              char *const argList[] = {command, file, NULL};
-              execv(abs_path, argList);
+              execv(abs_path, parmList);
+              break;
             }
             addr = strtok(NULL, delim);
           }
@@ -184,7 +160,7 @@ int main(int argc, char *argv[]) {
       } 
       else if (my_pid < 0) {
         exit(EXIT_FAILURE);
-      } 
+        } 
       else {
         waitpid(my_pid, &status, 0);
         }
