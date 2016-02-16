@@ -200,6 +200,9 @@ int main(int argc, char *argv[]) {
         } 
       else {
         waitpid(my_pid, &status, 0);
+        signal(SIGINT, SIG_IGN);
+        signal(SIGTERM, SIG_IGN);
+        signal(SIGTSTP, SIG_IGN);
         }
       }
 
