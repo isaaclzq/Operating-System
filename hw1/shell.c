@@ -138,7 +138,6 @@ int main(int argc, char *argv[]) {
       int flag = 0;
       my_pid = fork();
       if (my_pid == 0) {
-        tcsetpgrp(shell_terminal, shell_pgid);
         char *parmList[tokens_get_length(tokens)+1];
         int x;
         for (x = 0; x < tokens_get_length(tokens); x++){
