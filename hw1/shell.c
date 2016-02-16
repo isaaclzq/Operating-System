@@ -195,11 +195,11 @@ int main(int argc, char *argv[]) {
           }
         }  
       } 
-      else if (my_pid < 0) {
-        exit(EXIT_FAILURE);
-        } 
+      // else if (my_pid < 0) {
+      //   exit(EXIT_FAILURE);
+      //   } 
       else {
-        waitpid(my_pid, &status, 0);
+        //waitpid(my_pid, &status, 0);
         signal(SIGINT, SIG_IGN);
         signal(SIGTERM, SIG_IGN);
         signal(SIGTSTP, SIG_IGN);
