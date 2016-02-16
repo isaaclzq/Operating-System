@@ -13,6 +13,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+
+
 /* Whether the shell is connected to an actual terminal or not. */
 bool shell_is_interactive;
 
@@ -130,12 +132,19 @@ int main(int argc, char *argv[]) {
       char *name = "PATH";
       char *space = " ";
       char *redr_out = ">";
+      char *redr_in = "<";
+      int flag = 0;
       my_pid = fork();
       if (my_pid == 0) {
         char *parmList[tokens_get_length(tokens)+1];
         int x;
         for (x = 0; x < tokens_get_length(tokens); x++){
           if (strcmp(tokens_get_token(tokens, x), redr_out) == 0){
+            flag = 1;
+            index = x;
+            break;
+          } else if (strcmp(tokens_get_token(tokens, x), redr_in) == 0){
+            flag = 2;
             index = x;
             break;
           }
@@ -143,14 +152,24 @@ int main(int argc, char *argv[]) {
         }
 
         if (index != 0){
-          for (; index < tokens_get_length(tokens); index++){
-            parmList[index] = NULL;
-          }
-          if ((newfd = open(tokens_get_token(tokens, x+1), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)) < 0) {
-            perror(tokens_get_token(tokens, x+1));
-            exit(1);
-          }     
+          if (flag == 1){
+            for (; index < tokens_get_length(tokens); index++){
+              parmList[index] = NULL;
+            }
+            if ((newfd = open(tokens_get_token(tokens, x+1), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)) < 0) {
+              perror(tokens_get_token(tokens, x+1));
+              exit(1);
+            }     
             dup2(newfd, 1);
+          } else {
+            for (; index < tokens_get_length(tokens); index++){
+              parmList[index] = NULL;
+            }
+            if ((newfd = open(tokens_get_token(tokens, x+1), O_RDWR)) < 0){
+              exit(1);
+            }
+            dup2(newfd, STDIN_FILENO);
+          }
         }
         parmList[tokens_get_length(tokens)] = NULL;
         check_command = execv(tokens_get_token(tokens, 0), parmList);  
