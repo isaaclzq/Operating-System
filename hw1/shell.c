@@ -31,6 +31,7 @@ int cmd_exit(struct tokens *tokens);
 int cmd_help(struct tokens *tokens);
 int cmd_pwd(struct tokens *tokens);
 int cmd_cd(struct tokens *tokens);
+int cmd_wait(struct tokens *tokens);
 
 /* Built-in command functions take token array (see parse.h) and return int */
 typedef int cmd_fun_t(struct tokens *tokens);
@@ -47,6 +48,7 @@ fun_desc_t cmd_table[] = {
   {cmd_exit, "exit", "exit the command shell"},
   {cmd_pwd, "pwd", "print current working directory"},
   {cmd_cd, "cd", "change directory"},
+  {cmd_wait, "wait", "wait for children"}
 };
 
 /* Prints a helpful description for the given command */
@@ -72,6 +74,17 @@ int cmd_cd(struct tokens *tokens) {
   char *dir = tokens_get_token(tokens, 1);
   chdir(dir);
   return 1; 
+}
+
+int cmd_wait(struct tokens *tokens) {
+  // wait(NULL);
+  int pid;
+  while (pid = waitpid(-1, NULL, 0)) {
+    if (errno == ECHILD) {
+      break;
+    }
+  }
+  return 0;
 }
 
 /* Looks up the built-in command, if it exists. */
@@ -199,18 +212,19 @@ int main(int argc, char *argv[]) {
             }
             addr = strtok(NULL, delim);
           }
+          exit(EXIT_SUCCESS);
         }  
+        exit(EXIT_SUCCESS);
       } 
       else if (my_pid < 0) {
         exit(EXIT_FAILURE);
         } 
       else {
         signal(SIGINT, SIG_IGN);
-        //signal(SIGTERM, SIG_IGN);
-        //signal(SIGTSTP, SIG_IGN);
-        //waitpid(my_pid, &status, 0);
-        if (!wait_flag) {
-           wait(NULL);
+        signal(SIGTERM, SIG_IGN);
+        signal(SIGTSTP, SIG_IGN);
+        if (wait_flag) {
+            wait(NULL);
           }
         }
       }
