@@ -77,9 +77,8 @@ int cmd_cd(struct tokens *tokens) {
 }
 
 int cmd_wait(struct tokens *tokens) {
-  // wait(NULL);
-  int pid;
-  while (pid = waitpid(-1, NULL, 0)) {
+  int child_pid;
+  while (child_pid = wait(NULL)) {
     if (errno == ECHILD) {
       break;
     }
@@ -221,11 +220,7 @@ int main(int argc, char *argv[]) {
         } 
       else {
         signal(SIGINT, SIG_IGN);
-        signal(SIGTERM, SIG_IGN);
-        signal(SIGTSTP, SIG_IGN);
-        if (wait_flag) {
-            wait(NULL);
-          }
+        if (wait_flag) wait(NULL);
         }
       }
 
