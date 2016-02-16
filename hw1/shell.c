@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
     if (fundex >= 0) {
       cmd_table[fundex].fun(tokens);
     } else {
-      int status, my_pid, newfd, check_command, index = 0;
+      int my_pid, newfd, check_command, index = 0;
       char *name = "PATH";
       char *space = " ";
       char *redr_out = ">";
@@ -200,9 +200,9 @@ int main(int argc, char *argv[]) {
         } 
       else {
         signal(SIGINT, SIG_IGN);
-        signal(SIGTERM, SIG_IGN);
-        signal(SIGTSTP, SIG_IGN);
-        waitpid(my_pid, &status, 0);
+        //signal(SIGTERM, SIG_IGN);
+        //signal(SIGTSTP, SIG_IGN);
+        //waitpid(my_pid, &status, 0);
         }
       }
 
