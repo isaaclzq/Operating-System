@@ -124,18 +124,21 @@ int main(int argc, char *argv[]) {
 
     /* Find which built-in function to run. */
     int fundex = lookup(tokens_get_token(tokens, 0));
+    shell_pgid = getpid();
 
     if (fundex >= 0) {
       cmd_table[fundex].fun(tokens);
     } else {
-      int my_pid, newfd, check_command, index = 0;
+      int my_pid, newfd, check_command, index = 0, wait_flag = 0;
       char *name = "PATH";
       char *space = " ";
       char *redr_out = ">";
       char *redr_in = "<";
+      char *bg = "&";
       int flag = 0;
       my_pid = fork();
       if (my_pid == 0) {
+        tcsetpgrp(shell_terminal, shell_pgid);
         char *parmList[tokens_get_length(tokens)+1];
         int x;
         for (x = 0; x < tokens_get_length(tokens); x++){
@@ -146,6 +149,10 @@ int main(int argc, char *argv[]) {
           } else if (strcmp(tokens_get_token(tokens, x), redr_in) == 0){
             flag = 2;
             index = x;
+            break;
+          } else if (strcmp(tokens_get_token(tokens, x), bg) == 0){
+            parmList[x] = NULL;
+            wait_flag = 1;
             break;
           }
           parmList[x] = tokens_get_token(tokens, x);
@@ -203,6 +210,9 @@ int main(int argc, char *argv[]) {
         //signal(SIGTERM, SIG_IGN);
         //signal(SIGTSTP, SIG_IGN);
         //waitpid(my_pid, &status, 0);
+        if (!wait_flag) {
+           wait(NULL);
+          }
         }
       }
 
