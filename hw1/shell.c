@@ -126,17 +126,35 @@ int main(int argc, char *argv[]) {
     if (fundex >= 0) {
       cmd_table[fundex].fun(tokens);
     } else {
-      int status, my_pid, newfd, check_command;
+      int status, my_pid, newfd, check_command, index = 0;
       char *name = "PATH";
       char *space = " ";
-            my_pid = fork();
+      char *redr_out = ">";
+      my_pid = fork();
       if (my_pid == 0) {
         char *parmList[tokens_get_length(tokens)+1];
-        for (int x = 0; x < tokens_get_length(tokens); x++){
+        int x;
+        for (x = 0; x < tokens_get_length(tokens); x++){
+          if (strcmp(tokens_get_token(tokens, x), redr_out) == 0){
+            index = x;
+            break;
+          }
           parmList[x] = tokens_get_token(tokens, x);
         }
+
+        if (index != 0){
+          for (; index < tokens_get_length(tokens); index++){
+            parmList[index] = NULL;
+          }
+          if ((newfd = open(tokens_get_token(tokens, x+1), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)) < 0) {
+            perror(tokens_get_token(tokens, x+1));
+            exit(1);
+          }     
+            dup2(newfd, 1);
+        }
         parmList[tokens_get_length(tokens)] = NULL;
-        check_command = execv(tokens_get_token(tokens, 0), parmList);
+        check_command = execv(tokens_get_token(tokens, 0), parmList);  
+        // relative path for command
         if (check_command == -1){
           char *path = getenv(name);
           char *delim = ":";
@@ -156,7 +174,7 @@ int main(int argc, char *argv[]) {
             }
             addr = strtok(NULL, delim);
           }
-        }
+        }  
       } 
       else if (my_pid < 0) {
         exit(EXIT_FAILURE);
