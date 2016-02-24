@@ -62,8 +62,10 @@ void handle_files_request(int fd) {
   } else {
     file = request->path;
   }
-  char *path = (char*) malloc(sizeof(char) * (strlen(file) + strlen(server_files_directory))+1);
+  unsigned int length = sizeof(char) * (strlen(file) + strlen(server_files_directory)) + 1;
+  char path[length];
   strncpy(path, server_files_directory, strlen(server_files_directory));
+  strncat(path, defaultShort, strlen(defaultShort));
   strncat(path, file, strlen(file));
   if (access(path, F_OK) == F_OK){
     FILE *f = fopen(path, "r");
