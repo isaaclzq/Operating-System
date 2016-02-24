@@ -54,9 +54,17 @@ void handle_files_request(int fd) {
   /* YOUR CODE HERE (Feel free to delete/modify the existing code below) */
 
   struct http_request *request = http_request_parse(fd);
-  char *path = (char*) malloc(sizeof(char) * (strlen(request->path) + strlen(server_files_directory))+1);
+  char* defaultAddr = "index.html";
+  char* defaultShort = "/";
+  char* file;
+  if (strcmp(request->path, defaultShort) == 0){
+    file = defaultAddr;
+  } else {
+    file = request->path;
+  }
+  char *path = (char*) malloc(sizeof(char) * (strlen(file) + strlen(server_files_directory))+1);
   strncpy(path, server_files_directory, strlen(server_files_directory));
-  strncat(path, request->path, strlen(request->path));
+  strncat(path, file, strlen(file));
   if (access(path, F_OK) == F_OK){
     FILE *f = fopen(path, "r");
     if (!f) perror("shit"), exit(1);
