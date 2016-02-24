@@ -39,21 +39,51 @@ int server_proxy_port;
  *      of files in the directory with links to each.
  *   4) Send a 404 Not Found response.
  */
+
+// struct http_request *http_request_parse(int fd);
+// void http_start_response(int fd, int status_code);
+// void http_send_header(int fd, char *key, char *value);
+// void http_end_headers(int fd);
+// void http_send_string(int fd, char *data);
+// void http_send_data(int fd, char *data, size_t size);
+// char *http_get_mime_type(char *file_name);
+
+
 void handle_files_request(int fd) {
 
   /* YOUR CODE HERE (Feel free to delete/modify the existing code below) */
 
   struct http_request *request = http_request_parse(fd);
+  char *path = (char*) malloc(sizeof(char) * (strlen(request->path) + strlen(server_files_directory))+1);
+  strncpy(path, server_files_directory, strlen(server_files_directory));
+  strncat(path, request->path, strlen(request->path));
+  if (access(path, F_OK) == F_OK){
+    FILE *f = fopen(path, "r");
+    if (!f) perror("shit"), exit(1);
+    fseek(f, 0L, SEEK_END);
+    long fsize = ftell(f);
+    rewind(f);
+    char *string = malloc(fsize+1);
+    fread(string, fsize, 1, f);
+    fclose(f);
+    http_start_response(fd, 200);
+    http_send_header(fd, "Content-type", http_get_mime_type(path));
+    http_end_headers(fd);
+    http_send_data(fd, string, fsize);
+    free(string);
+  } else {
+    http_start_response(fd, 404);
+  }
 
-  http_start_response(fd, 200);
-  http_send_header(fd, "Content-type", "text/html");
-  http_end_headers(fd);
-  http_send_string(fd,
-      "<center>"
-      "<h1>Welcome to httpserver!</h1>"
-      "<hr>"
-      "<p>Nothing's here yet.</p>"
-      "</center>");
+  // http_start_response(fd, 200);
+  // http_send_header(fd, "Content-type", "text/html");
+  // http_end_headers(fd);
+  // http_send_string(fd,
+  //     "<center>"
+  //     "<h1>Welcome to httpserver!</h1>"
+  //     "<hr>"
+  //     "<p>Nothing's here yet.</p>"
+  //     "</center>");
 
 }
 
