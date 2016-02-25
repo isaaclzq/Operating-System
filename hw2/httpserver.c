@@ -111,7 +111,6 @@ void handle_files_request(int fd) {
       requestSuccess(fd, absPath);
     } else {
       DIR *output = opendir(path);
-      
     }
   } else {
     http_start_response(fd, 404);
