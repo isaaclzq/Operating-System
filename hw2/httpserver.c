@@ -72,12 +72,15 @@ void handle_files_request(int fd) {
     if (!f) perror("shit"), exit(1);
     fseek(f, 0L, SEEK_END);
     long fsize = ftell(f);
+    char size[10];
+    snprintf(size, 10, "%ld", fsize);
     rewind(f);
     char *string = malloc(fsize+1);
     fread(string, fsize, 1, f);
     fclose(f);
     http_start_response(fd, 200);
     http_send_header(fd, "Content-type", http_get_mime_type(path));
+    http_send_header(fd, "Content-Length", size);
     http_end_headers(fd);
     http_send_data(fd, string, fsize);
     free(string);
