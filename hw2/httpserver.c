@@ -28,6 +28,8 @@ char *server_files_directory;
 char *server_proxy_hostname;
 int server_proxy_port;
 
+void requestSuccess(int fd, char *path);
+char* combine(char* addr1, char* addr2);
 /*
  * Reads an HTTP request from stream (fd), and writes an HTTP response
  * containing:
@@ -49,41 +51,68 @@ int server_proxy_port;
 // char *http_get_mime_type(char *file_name);
 
 
+
+void requestSuccess(int fd, char *path){
+  char content_length[10];
+  FILE *f;
+  long fsize;
+
+  f = fopen(path, "r");
+  if (!f) perror("error"), exit(1);
+  fseek(f, 0L, SEEK_END);
+  fsize = ftell(f);
+  rewind(f);
+  char *string = malloc(fsize+1);
+  fread(string, fsize, 1, f);
+  fclose(f);
+  http_start_response(fd, 200);
+  http_send_header(fd, "Content-type", http_get_mime_type(path));
+  snprintf(content_length, 10, "%ld", fsize);
+  http_send_header(fd, "Content-Length", content_length);
+  http_end_headers(fd);
+  http_send_data(fd, string, fsize);
+  free(string);
+}
+
+
+char* combine(char* addr1, char* addr2){
+  unsigned int length = strlen(addr1) + strlen(addr2) + 1;
+
+  return NULL;
+}
+
+
+
 void handle_files_request(int fd) {
 
   /* YOUR CODE HERE (Feel free to delete/modify the existing code below) */
 
   struct http_request *request = http_request_parse(fd);
-  char* defaultAddr = "index.html";
-  char* defaultShort = "/";
-  char* file;
-  if (strcmp(request->path, defaultShort) == 0){
-    file = defaultAddr;
-  } else {
-    file = request->path;
-  }
-  unsigned int length = sizeof(char) * (strlen(file) + strlen(server_files_directory)) + 1;
+  char* delim = "/";
+  char* defalutFile = "index.html";
+  unsigned int length = sizeof(char) * (strlen(request->path) + strlen(server_files_directory)) + 1;
   char path[length];
+  struct stat st;
+
+  
   strncpy(path, server_files_directory, strlen(server_files_directory));
-  strncat(path, defaultShort, strlen(defaultShort));
-  strncat(path, file, strlen(file));
-  if (access(path, F_OK) == F_OK){
-    FILE *f = fopen(path, "r");
-    if (!f) perror("shit"), exit(1);
-    fseek(f, 0L, SEEK_END);
-    long fsize = ftell(f);
-    char size[10];
-    snprintf(size, 10, "%ld", fsize);
-    rewind(f);
-    char *string = malloc(fsize+1);
-    fread(string, fsize, 1, f);
-    fclose(f);
-    http_start_response(fd, 200);
-    http_send_header(fd, "Content-type", http_get_mime_type(path));
-    http_send_header(fd, "Content-Length", size);
-    http_end_headers(fd);
-    http_send_data(fd, string, fsize);
-    free(string);
+  strncat(path, delim, strlen(delim));
+  strncat(path, request->path, strlen(request->path));
+  stat(path, &st);
+  if (access(path, F_OK) == F_OK && S_ISREG(st.st_mode)){
+    requestSuccess(fd, path);
+  } else if (access(path, F_OK) == F_OK && S_ISDIR(st.st_mode)){
+    length += strlen(defalutFile) + 1;
+    char absPath[length];
+    strncpy(absPath, path, strlen(path));
+    strncat(absPath, delim, strlen(delim));
+    strncat(absPath, defalutFile, strlen(defalutFile));
+    if (access(absPath, F_OK) == F_OK){
+      requestSuccess(fd, absPath);
+    } else {
+      DIR *output = opendir(path);
+      
+    }
   } else {
     http_start_response(fd, 404);
   }
