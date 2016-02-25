@@ -90,28 +90,33 @@ void handle_files_request(int fd) {
   struct http_request *request = http_request_parse(fd);
   char* delim = "/";
   char* defalutFile = "index.html";
-  unsigned int length = sizeof(char) * (strlen(request->path) + strlen(server_files_directory)) + 1;
+  unsigned int length = strlen(request->path) + strlen(server_files_directory) + 1;
   char path[length];
   struct stat st;
 
+  //printf("server file dir %s\n", server_files_directory);
+  //printf("path %s\n", request->path);
   
   strncpy(path, server_files_directory, strlen(server_files_directory));
   strncat(path, delim, strlen(delim));
   strncat(path, request->path, strlen(request->path));
+  //printf("path is %s\n", path);
   stat(path, &st);
   if (access(path, F_OK) == F_OK && S_ISREG(st.st_mode)){
     requestSuccess(fd, path);
   } else if (access(path, F_OK) == F_OK && S_ISDIR(st.st_mode)){
-    length += strlen(defalutFile) + 1;
+    length = strlen(server_files_directory) + strlen(defalutFile);
     char absPath[length];
-    strncpy(absPath, path, strlen(path));
+    strncpy(absPath, server_files_directory, strlen(server_files_directory));
     strncat(absPath, delim, strlen(delim));
     strncat(absPath, defalutFile, strlen(defalutFile));
+    //printf("%s\n", absPath);
     if (access(absPath, F_OK) == F_OK){
       requestSuccess(fd, absPath);
-    } else {
-      DIR *output = opendir(path);
     }
+    // } else {
+    //   DIR *output = opendir(path);
+    // }
   } else {
     http_start_response(fd, 404);
   }
