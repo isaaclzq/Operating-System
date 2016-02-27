@@ -102,6 +102,7 @@ void handle_files_request(int fd) {
   strncat(path, request->path, strlen(request->path));
   //printf("path is %s\n", path);
   stat(path, &st);
+  printf("%s\n", path);
   if (access(path, F_OK) == F_OK && S_ISREG(st.st_mode)){
     requestSuccess(fd, path);
   } else if (access(path, F_OK) == F_OK && S_ISDIR(st.st_mode)){
@@ -110,13 +111,25 @@ void handle_files_request(int fd) {
     strncpy(absPath, server_files_directory, strlen(server_files_directory));
     strncat(absPath, delim, strlen(delim));
     strncat(absPath, defalutFile, strlen(defalutFile));
-    //printf("%s\n", absPath);
+    printf("%s\n", absPath);
     if (access(absPath, F_OK) == F_OK){
       requestSuccess(fd, absPath);
     }
-    // } else {
-    //   DIR *output = opendir(path);
-    // }
+    else {
+      DIR *output = opendir(path);
+      char buffer[2048*4];
+      memset(&buffer, 0, sizeof(buffer));
+      struct dirent *dir;
+      if (output) {
+        char *line = "\n";
+        while ((dir = readdir(output)) != NULL){
+          strncat(buffer, dir->d_name, strlen(dir->d_name));
+          strncat(buffer, line, strlen(line));
+        }
+        closedir(output);
+      }
+      http_send_data(fd, buffer, strlen(buffer));
+    }
   } else {
     http_start_response(fd, 404);
   }
