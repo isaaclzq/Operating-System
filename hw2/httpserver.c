@@ -150,6 +150,7 @@ void handle_files_request(int fd) {
         }
       }
       strncat(buffer, end, strlen(end));
+      http_start_response(fd, 100);
       http_send_header(fd, "Content-type", type);
       http_end_headers(fd);
       http_send_data(fd, buffer, strlen(buffer));
