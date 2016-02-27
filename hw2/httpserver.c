@@ -93,16 +93,12 @@ void handle_files_request(int fd) {
   unsigned int length = strlen(request->path) + strlen(server_files_directory) + 1;
   char path[length];
   struct stat st;
-
-  //printf("server file dir %s\n", server_files_directory);
-  //printf("path %s\n", request->path);
   
   strncpy(path, server_files_directory, strlen(server_files_directory));
   strncat(path, delim, strlen(delim));
   strncat(path, request->path, strlen(request->path));
-  //printf("path is %s\n", path);
+  
   stat(path, &st);
-  printf("%s\n", path);
   if (access(path, F_OK) == F_OK && S_ISREG(st.st_mode)){
     requestSuccess(fd, path);
   } else if (access(path, F_OK) == F_OK && S_ISDIR(st.st_mode)){
@@ -111,7 +107,6 @@ void handle_files_request(int fd) {
     strncpy(absPath, server_files_directory, strlen(server_files_directory));
     strncat(absPath, delim, strlen(delim));
     strncat(absPath, defalutFile, strlen(defalutFile));
-    printf("%s\n", absPath);
     if (access(absPath, F_OK) == F_OK){
       requestSuccess(fd, absPath);
     }
@@ -122,12 +117,15 @@ void handle_files_request(int fd) {
       struct dirent *dir;
       if (output) {
         char *line = "\n";
+        char *parent = "<a href='../'>Parent directory</a>";
         while ((dir = readdir(output)) != NULL){
+          strncat(buffer, parent, strlen(parent));
           strncat(buffer, dir->d_name, strlen(dir->d_name));
           strncat(buffer, line, strlen(line));
         }
         closedir(output);
       }
+      http_send_header(fd, "Content-type", http_get_mime_type(path));
       http_send_data(fd, buffer, strlen(buffer));
     }
   } else {
