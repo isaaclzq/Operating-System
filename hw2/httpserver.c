@@ -94,38 +94,64 @@ void handle_files_request(int fd) {
   char path[length];
   struct stat st;
   
+  memset(path, 0, sizeof(path));
   strncpy(path, server_files_directory, strlen(server_files_directory));
   strncat(path, delim, strlen(delim));
   strncat(path, request->path, strlen(request->path));
   
+  //printf("path : %s\n", path);
   stat(path, &st);
   if (access(path, F_OK) == F_OK && S_ISREG(st.st_mode)){
     requestSuccess(fd, path);
   } else if (access(path, F_OK) == F_OK && S_ISDIR(st.st_mode)){
-    length = strlen(server_files_directory) + strlen(defalutFile);
+    length = strlen(server_files_directory) + strlen(defalutFile) + 2*strlen(delim) + strlen(request->path);
     char absPath[length];
+    memset(absPath, 0, sizeof(absPath));
     strncpy(absPath, server_files_directory, strlen(server_files_directory));
     strncat(absPath, delim, strlen(delim));
+    strncat(absPath , request->path, strlen(request->path));
+    strncat(absPath, delim, strlen(delim));
     strncat(absPath, defalutFile, strlen(defalutFile));
+    //printf("here: %s\n", absPath);
     if (access(absPath, F_OK) == F_OK){
       requestSuccess(fd, absPath);
     }
     else {
       DIR *output = opendir(path);
       char buffer[2048*4];
-      memset(&buffer, 0, sizeof(buffer));
       struct dirent *dir;
+      char *parent = "<a href='../'>Parent directory</a>";
+      char *type = "text/html";
+      char *starter = "<!DOCTYPE html><html><body>";
+      char *end = "</body></html>";
+      char *parag = "<p>";
+      char *end_parag = "</p>";
+      char *start_link = "<a href='";
+      char *mid_link = "'>";
+      char *end_link = "</a>";
+      char *current = ".";
+      char *previous = "..";
+
       if (output) {
-        char *line = "\n";
-        char *parent = "<a href='../'>Parent directory</a>";
+        memset(&buffer, 0, sizeof(buffer));
+        strncpy(buffer, starter, strlen(buffer));
+        strncat(buffer, parent, strlen(parent));
         while ((dir = readdir(output)) != NULL){
-          strncat(buffer, parent, strlen(parent));
+          if (strcmp(dir->d_name, current) == 0 || strcmp(dir->d_name, previous) == 0){
+            continue;
+          }
+          strncat(buffer, parag, strlen(parag));
+          strncat(buffer, start_link, strlen(start_link));
           strncat(buffer, dir->d_name, strlen(dir->d_name));
-          strncat(buffer, line, strlen(line));
+          strncat(buffer, mid_link, strlen(mid_link));
+          strncat(buffer, dir->d_name, strlen(dir->d_name));
+          strncat(buffer, end_link, strlen(end_link));
+          strncat(buffer, end_parag, strlen(end_parag));
         }
-        closedir(output);
       }
-      http_send_header(fd, "Content-type", http_get_mime_type(path));
+      strncat(buffer, end, strlen(end));
+      http_send_header(fd, "Content-type", type);
+      http_end_headers(fd);
       http_send_data(fd, buffer, strlen(buffer));
     }
   } else {
