@@ -149,9 +149,12 @@ void handle_files_request(int fd) {
           strncat(buffer, end_parag, strlen(end_parag));
         }
       }
+      char content_length[10];
       strncat(buffer, end, strlen(end));
-      http_start_response(fd, 100);
+      http_start_response(fd, 200);
       http_send_header(fd, "Content-type", type);
+      snprintf(content_length, 10, "%ld", strlen(buffer));
+      http_send_header(fd, "Content-Length", content_length);
       http_end_headers(fd);
       http_send_data(fd, buffer, strlen(buffer));
     }
