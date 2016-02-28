@@ -185,23 +185,65 @@ void handle_files_request(int fd) {
  *   | client | <-> | httpserver | <-> | proxy target |
  *   +--------+     +------------+     +--------------+
  */
+
 void handle_proxy_request(int fd) {
 
   /* YOUR CODE HERE */
   char *hostname = server_proxy_hostname;
+  int flag;
   int len;
+  int socket_option = 1;
   char buffer[1024*4];
   int port = server_proxy_port;
   struct hostent *lookup = gethostbyname(hostname);
   char* ip_addr = inet_ntoa(*(struct in_addr*)lookup->h_addr);
-  int p_socket = socket(AF_INET, SOCK_STREAM, 0);
+
+  int r_sock = socket(AF_INET, SOCK_STREAM, 0);
+  setsockopt(r_sock, SOL_SOCKET, SO_REUSEADDR, &socket_option, sizeof(socket_option));
   struct sockaddr_in dest;
   memset(&dest, 0, sizeof(dest));
   dest.sin_family = AF_INET;
   dest.sin_addr.s_addr = inet_addr(ip_addr);
   dest.sin_port = htons(port);
-  connect(p_socket, (struct sockaddr *)&dest, sizeof(struct sockaddr));
-  len = recv(p_socket, buffer, 4096, 0);
+  flag = connect(r_sock, (struct sockaddr *)&dest, sizeof(struct sockaddr_in));
+  if (flag < 0){
+    close(r_sock);
+    printf("fuck up\n");
+  }  
+
+  fd_set read_fd_set;
+  fd_set master;
+  FD_ZERO(&master);
+  FD_ZERO(&read_fd_set);
+  FD_SET(r_sock,&master);
+  FD_SET(fd,&master);
+  int r;
+  char buf[10000];
+  while(1){
+    read_fd_set = master;
+    r = select(FD_SETSIZE,&read_fd_set,NULL,NULL,NULL);
+    if(r == 0){
+      printf("error\n");
+      perror("select");
+      exit(EXIT_FAILURE);
+    } 
+    else if( FD_ISSET(fd,&read_fd_set) ){
+      r = read(fd,buf,sizeof(buf));
+      if( r <= 0)  break;
+      r = write(r_sock,buf,r);
+      if( r <= 0) break;
+      printf("client %d bytes\n",r);
+    }
+    else if( FD_ISSET( r_sock,&read_fd_set) ){
+      r = read(r_sock,buf,sizeof(buf));
+      printf("%s",buf);
+      if( r <= 0 ) break;
+      r = write(fd,buf,r);
+      if (r <= 0) break;
+    }
+  }
+  close(r_sock);
+
 
 }
 
