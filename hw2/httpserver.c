@@ -16,7 +16,7 @@
 #include <unistd.h>
 
 #include "libhttp.h"
-
+#define BUFF_SIZE 1024
 /*
  * Global configuration variables.
  * You need to use these in your implementation of handle_files_request and
@@ -190,12 +190,13 @@ void handle_proxy_request(int fd) {
 
   /* YOUR CODE HERE */
   char *hostname = server_proxy_hostname;
-  int flag;
+  int select_check, numByte, flag;
   int socket_option = 1;
-  char buffer[1024*4];
+  char buffer[BUFF_SIZE];
   int port = server_proxy_port;
   struct hostent *lookup = gethostbyname(hostname);
   char* ip_addr = inet_ntoa(*(struct in_addr*)lookup->h_addr);
+  fd_set fd_set, active_fd_set;
 
   int r_sock = socket(AF_INET, SOCK_STREAM, 0);
   setsockopt(r_sock, SOL_SOCKET, SO_REUSEADDR, &socket_option, sizeof(socket_option));
@@ -210,32 +211,27 @@ void handle_proxy_request(int fd) {
     printf("fuck up\n");
   }  
 
-  fd_set read_fd_set;
-  fd_set master;
-  FD_ZERO(&master);
-  FD_ZERO(&read_fd_set);
-  FD_SET(r_sock,&master);
-  FD_SET(fd,&master);
-  int r;
+  FD_ZERO(&active_fd_set);
+  FD_ZERO(&fd_set);
+  FD_SET(r_sock, &active_fd_set);
+  FD_SET(fd, &active_fd_set);
   while(1){
-    read_fd_set = master;
-    r = select(FD_SETSIZE,&read_fd_set,NULL,NULL,NULL);
-    if(r == 0){
-      perror("select");
+    fd_set = active_fd_set;
+    select_check = select(FD_SETSIZE, &fd_set, NULL, NULL, NULL);
+    if(select_check == -1){
       exit(EXIT_FAILURE);
-    } 
-    else if( FD_ISSET(fd,&read_fd_set) ){
-      r = read(fd,buffer,sizeof(buffer));
-      r = write(r_sock,buffer,r);
-    }
-    else if( FD_ISSET( r_sock,&read_fd_set) ){
-      r = read(r_sock,buffer,sizeof(buffer));
-      r = write(fd,buffer,r);
+    } else if (FD_ISSET(fd, &fd_set)){
+      if ((numByte = read(fd, buffer, sizeof(buffer))) < 0) exit(EXIT_FAILURE);
+      if ((numByte = write(r_sock, buffer, numByte)) < 0) exit(EXIT_FAILURE);
+    } else if (FD_ISSET(r_sock, &fd_set)){
+      if ((numByte = read(r_sock, buffer, sizeof(buffer))) < 0) exit(EXIT_FAILURE);
+      if ((numByte = write(fd, buffer, numByte)) < 0) exit(EXIT_FAILURE);
+    } else {
+      exit(EXIT_FAILURE);
     }
   }
   close(r_sock);
-
-
+  close(fd);
 }
 
 /*
