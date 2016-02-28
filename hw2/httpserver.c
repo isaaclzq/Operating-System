@@ -188,6 +188,20 @@ void handle_files_request(int fd) {
 void handle_proxy_request(int fd) {
 
   /* YOUR CODE HERE */
+  char *hostname = server_proxy_hostname;
+  int len;
+  char buffer[1024*4];
+  int port = server_proxy_port;
+  struct hostent *lookup = gethostbyname(hostname);
+  char* ip_addr = inet_ntoa(*(struct in_addr*)lookup->h_addr);
+  int p_socket = socket(AF_INET, SOCK_STREAM, 0);
+  struct sockaddr_in dest;
+  memset(&dest, 0, sizeof(dest));
+  dest.sin_family = AF_INET;
+  dest.sin_addr.s_addr = inet_addr(ip_addr);
+  dest.sin_port = htons(port);
+  connect(p_socket, (struct sockaddr *)&dest, sizeof(struct sockaddr));
+  len = recv(p_socket, buffer, 4096, 0);
 
 }
 
