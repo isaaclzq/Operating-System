@@ -191,7 +191,6 @@ void handle_proxy_request(int fd) {
   /* YOUR CODE HERE */
   char *hostname = server_proxy_hostname;
   int flag;
-  int len;
   int socket_option = 1;
   char buffer[1024*4];
   int port = server_proxy_port;
@@ -218,28 +217,20 @@ void handle_proxy_request(int fd) {
   FD_SET(r_sock,&master);
   FD_SET(fd,&master);
   int r;
-  char buf[10000];
   while(1){
     read_fd_set = master;
     r = select(FD_SETSIZE,&read_fd_set,NULL,NULL,NULL);
     if(r == 0){
-      printf("error\n");
       perror("select");
       exit(EXIT_FAILURE);
     } 
     else if( FD_ISSET(fd,&read_fd_set) ){
-      r = read(fd,buf,sizeof(buf));
-      if( r <= 0)  break;
-      r = write(r_sock,buf,r);
-      if( r <= 0) break;
-      printf("client %d bytes\n",r);
+      r = read(fd,buffer,sizeof(buffer));
+      r = write(r_sock,buffer,r);
     }
     else if( FD_ISSET( r_sock,&read_fd_set) ){
-      r = read(r_sock,buf,sizeof(buf));
-      printf("%s",buf);
-      if( r <= 0 ) break;
-      r = write(fd,buf,r);
-      if (r <= 0) break;
+      r = read(r_sock,buffer,sizeof(buffer));
+      r = write(fd,buffer,r);
     }
   }
   close(r_sock);
