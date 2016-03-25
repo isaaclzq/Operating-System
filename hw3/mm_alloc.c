@@ -62,21 +62,22 @@ void *mm_malloc(size_t size) {
 	while (iter->free == 0){
 		if (iter->size >= size + meta_size){
 			break;
-		}
-		if (NULL == iter->next){
+		} else if (NULL == iter->next){
 			break;
 		}
 		iter = iter->next;
 	}
 	printf("1\n");
-	if (iter->size + meta_size > size + 2 * meta_size){
-		printf("2\n");
-		reuse_and_alloc(iter, size);
-		return iter->data;
-	} else if (iter->size + meta_size >= size + meta_size) {
-		printf("3\n");
-		reuse(iter, size);
-		return iter->data; 
+	if (iter->size >= size + meta_size && NULL != iter->next){
+		if (iter->size + meta_size > size + 2 * meta_size){
+			printf("2\n");
+			reuse_and_alloc(iter, size);
+			return iter->data;
+		} else if (iter->size + meta_size >= size + meta_size) {
+			printf("3\n");
+			reuse(iter, size);
+			return iter->data; 
+		}
 	}
 	printf("4\n");
     void* p = sbrk(size + meta_size);
