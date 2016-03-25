@@ -17,7 +17,7 @@ unsigned meta_size = sizeof(struct alloc_chunk);
 int init(size_t size){
 	void* p = sbrk(size + meta_size);
 	if ((void*) -1 == p){
-		//perror("sbrk");
+		perror("sbrk");
 		return 0;
 	}
 	chunk = (struct alloc_chunk*) p;
@@ -84,7 +84,7 @@ void *mm_malloc(size_t size) {
 	// iter->next->prev = iter;		
 	// memset(iter->next->data, 0, size);
     //return iter->next->data;
-    return chunk;
+    return NULL;
 }
 
 void *mm_realloc(void *ptr, size_t size) {
