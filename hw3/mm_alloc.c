@@ -45,6 +45,7 @@ void reuse_and_alloc(struct alloc_chunk* ptr, size_t size){
 	rest->free = 1;
 	rest->prev = ptr;
 	rest->next->prev = rest;
+	
 }
 
 void *mm_malloc(size_t size) {
