@@ -14,11 +14,10 @@ static struct alloc_chunk* chunk;
 unsigned meta_size = sizeof(struct alloc_chunk);
 
 
-void *init(size_t size){
+void init(size_t size){
 	void* p = sbrk(size + meta_size);
 	if ((void*) -1 == p){
 		perror("sbrk");
-		return NULL;
 	}
 	chunk = (struct alloc_chunk*) p;
 	chunk->size = size;
@@ -26,7 +25,6 @@ void *init(size_t size){
 	chunk->next = NULL;
 	chunk->prev = NULL;		
 	memset(chunk->data, 0, size);
-	return NULL;
 }
 
 void reuse(struct alloc_chunk* ptr, size_t size){
@@ -51,7 +49,11 @@ void *mm_malloc(size_t size) {
     /* YOUR CODE HERE */
     if (chunk == NULL){
     	init(size);
-    	return chunk->data;
+    	if (chunk){
+    		return chunk->data;
+    	} else {
+    		return NULL;
+    	}
     }
     // implementing first fit
  //    struct alloc_chunk* iter = chunk;
