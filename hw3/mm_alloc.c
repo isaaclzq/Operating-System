@@ -14,10 +14,11 @@ static struct alloc_chunk* chunk;
 unsigned meta_size = sizeof(struct alloc_chunk);
 
 
-void init(size_t size){
+int init(size_t size){
 	void* p = sbrk(size + meta_size);
 	if ((void*) -1 == p){
 		perror("sbrk");
+		return 0;
 	}
 	chunk = (struct alloc_chunk*) p;
 	chunk->size = size;
@@ -25,6 +26,7 @@ void init(size_t size){
 	chunk->next = NULL;
 	chunk->prev = NULL;		
 	memset(chunk->data, 0, size);
+	return 1;
 }
 
 void reuse(struct alloc_chunk* ptr, size_t size){
@@ -48,8 +50,8 @@ void reuse_and_alloc(struct alloc_chunk* ptr, size_t size){
 void *mm_malloc(size_t size) {
     /* YOUR CODE HERE */
     if (chunk == NULL){
-    	init(size);
-    	if (chunk){
+    	int succeed = init(size);
+    	if (succeed){
     		return chunk->data;
     	} else {
     		return NULL;
