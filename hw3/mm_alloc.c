@@ -52,33 +52,34 @@ void *mm_malloc(size_t size) {
     	init(size);
     	return chunk->data;
     }
-    // implementing first fit
-    struct alloc_chunk* iter = chunk;
-    while (iter->next != NULL){
-    	while (iter->free == 0){
-    		iter = iter->next;
-    	}
-    	if (iter->size - meta_size > size + meta_size){
-    		reuse_and_alloc(iter, size);
-    		break;
-    	} else if (iter->size > size + meta_size) {
-    		reuse(iter, size);
-    		break;
-    	}
-    	iter = iter->next;
-    }
-    void* p = sbrk(size + meta_size);
-	if ((void*) -1 == p){
-		perror("sbrk");
-		exit(1);
-	}
-	iter->next = (struct alloc_chunk*) p;
-	iter->next->size = size;
-	iter->next->free = 0;
-	iter->next->next = NULL;
-	iter->next->prev = iter;		
-	memset(iter->next->data, 0, size);
     return NULL;
+    // implementing first fit
+ //    struct alloc_chunk* iter = chunk;
+ //    while (iter->next != NULL){
+ //    	while (iter->free == 0){
+ //    		iter = iter->next;
+ //    	}
+ //    	if (iter->size - meta_size > size + meta_size){
+ //    		reuse_and_alloc(iter, size);
+ //    		break;
+ //    	} else if (iter->size > size + meta_size) {
+ //    		reuse(iter, size);
+ //    		break;
+ //    	}
+ //    	iter = iter->next;
+ //    }
+ //    void* p = sbrk(size + meta_size);
+	// if ((void*) -1 == p){
+	// 	perror("sbrk");
+	// 	exit(1);
+	// }
+	// iter->next = (struct alloc_chunk*) p;
+	// iter->next->size = size;
+	// iter->next->free = 0;
+	// iter->next->next = NULL;
+	// iter->next->prev = iter;		
+	// memset(iter->next->data, 0, size);
+ //    return iter->next->data;
 }
 
 void *mm_realloc(void *ptr, size_t size) {
