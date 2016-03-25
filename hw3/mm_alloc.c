@@ -53,7 +53,6 @@ void *mm_malloc(size_t size) {
     	init(size);
     	return chunk->data;
     }
-    return NULL;
     // implementing first fit
     struct alloc_chunk* iter = chunk;
     while (iter->next != NULL){
