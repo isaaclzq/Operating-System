@@ -20,6 +20,6 @@ struct alloc_chunk {
 	char data[0];
 };
 
-void init(size_t size);
+void *init(size_t size);
 void reuse(struct alloc_chunk*, size_t);
 void reuse_and_alloc(struct alloc_chunk* ptr, size_t size);
