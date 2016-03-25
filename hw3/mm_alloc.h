@@ -11,3 +11,13 @@
 void *mm_malloc(size_t size);
 void *mm_realloc(void *ptr, size_t size);
 void mm_free(void *ptr);
+
+struct alloc_chunk {
+	size_t size;
+	int free;
+	struct alloc_chunk* prev;
+	struct alloc_chunk* next;
+	char data[0];
+};
+
+void init(size_t);
