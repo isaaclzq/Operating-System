@@ -62,10 +62,10 @@ void *mm_malloc(size_t size) {
     	}
     	if (iter->size - meta_size > size + meta_size){
     		reuse_and_alloc(iter, size);
-    		break;
+    		return iter->data;
     	} else if (iter->size > size + meta_size) {
     		reuse(iter, size);
-    		break;
+    		return iter->data; 
     	}
     	iter = iter->next;
     }
