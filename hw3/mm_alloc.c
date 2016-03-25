@@ -17,7 +17,7 @@ unsigned meta_size = sizeof(struct alloc_chunk);
 int init(size_t size){
 	void* p = sbrk(size + meta_size);
 	if ((void*) -1 == p){
-		perror("sbrk");
+		//perror("sbrk");
 		return 0;
 	}
 	chunk = (struct alloc_chunk*) p;
@@ -45,7 +45,6 @@ void reuse_and_alloc(struct alloc_chunk* ptr, size_t size){
 	rest->free = 1;
 	rest->prev = ptr;
 	rest->next->prev = rest;
-	
 }
 
 void *mm_malloc(size_t size) {
