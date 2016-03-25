@@ -199,7 +199,7 @@ void handle_proxy_request(int fd) {
   fd_set fd_set, active_fd_set;
 
   int r_sock = socket(AF_INET, SOCK_STREAM, 0);
-  setsockopt(r_sock, SOL_SOCKET, SO_REUSEADDR, &socket_option, sizeof(socket_option));
+  //setsockopt(r_sock, SOL_SOCKET, SO_REUSEADDR, &socket_option, sizeof(socket_option));
   struct sockaddr_in dest;
   memset(&dest, 0, sizeof(dest));
   dest.sin_family = AF_INET;
