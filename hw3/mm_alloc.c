@@ -57,6 +57,7 @@ void *mm_malloc(size_t size) {
     if (chunk == NULL){
     	int succeed = init(size);
     	if (succeed){
+    		output_list();
     		return chunk->data;
     	} else {
     		return NULL;
@@ -102,17 +103,34 @@ void *mm_malloc(size_t size) {
 
 void *mm_realloc(void *ptr, size_t size) {
     /* YOUR CODE HERE */
-    return NULL;
+    if (ptr == NULL){
+    	return NULL;
+    }
+    struct alloc_chunk* meta = (struct alloc_chunk*)(ptr - meta_size);
+	if (meta->next == NULL){
+		size_t extend = size - meta->size;
+		void* p = sbrk(extend);
+		if ((void*) -1 == p){
+			perror("sbrk");
+			return NULL;
+		}
+		memset((meta->size)+ptr, 0, extend);
+		meta->size = size;	
+		output_list();
+		printf("---------\n");
+	    return ptr;
+	}
+	return NULL;
 }
 
 void mm_free(void *ptr) {
     /* YOUR CODE HERE */
     if (NULL != ptr){
-    	struct alloc_chunk* meta = ptr - meta_size;
-    	meta->free = 1;
     	printf("before layout: \n");
     	output_list();
     	printf("\n");
+    	struct alloc_chunk* meta = ptr - meta_size;
+    	meta->free = 1;
     	coalesce();
     	printf("after layout: \n");
     	output_list();
