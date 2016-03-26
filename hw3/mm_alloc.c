@@ -44,7 +44,9 @@ void reuse_and_alloc(void* ptr, size_t size){
 	rest->size = leftover;
 	rest->free = 1;
 	rest->prev = ptr;
-	rest->next->prev = rest;
+	if (rest->next){
+		rest->next->prev = rest;	
+	}
 }
 
 void *mm_malloc(size_t size) {
@@ -136,9 +138,9 @@ void coalesce(struct alloc_chunk* iter){
 	}
 	printf("address gets out of while: %p\n", iter);
 	if (iter->next->free == 1){
-		// if (iter->next->next){
-		// 	iter->next->next->prev = iter;	
-		// } 
+		if (iter->next->next){
+			iter->next->next->prev = iter;	
+		} 
 		iter->size += meta_size + iter->next->size;
 		iter->next = iter->next->next;
 		memset(iter->data, 0, iter->size);
