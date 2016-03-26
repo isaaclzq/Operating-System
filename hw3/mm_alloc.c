@@ -52,6 +52,7 @@ void *mm_malloc(size_t size) {
     if (chunk == NULL){
     	int succeed = init(size);
     	if (succeed){
+    		printf("init good\n");
     		return chunk->data;
     	} else {
     		return NULL;
@@ -59,38 +60,34 @@ void *mm_malloc(size_t size) {
     }
     // implementing first fit
     struct alloc_chunk* iter = chunk;
-	while (iter->free == 0){
-		if (iter->size + meta_size>= size + meta_size){
-			break;
-		} else if (NULL == iter->next){
-			break;
+	while (iter->free == 0 || iter->size < size){
+		if (NULL == iter->next){
+			printf("2\n");
+			void* p = sbrk(size + meta_size);
+			if ((void*) -1 == p){
+				perror("sbrk");
+				return NULL;
+			}
+			iter->next = (struct alloc_chunk*) p;
+			iter->next->size = size;
+			iter->next->free = 0;
+			iter->next->next = NULL;
+			iter->next->prev = iter;		
+			memset(iter->next->data, 0, size);
+		    return iter->next->data;
 		}
 		iter = iter->next;
 	}
-	printf("1\n");
-	if (iter->size + meta_size >= size + meta_size){
-		if (iter->size + meta_size > size + 2 * meta_size){
-			printf("2\n");
-			reuse_and_alloc(iter, size);
-			return iter->data;
-		} else if (iter->size + meta_size >= size + meta_size) {
-			printf("3\n");
-			reuse(iter, size);
-			return iter->data; 
-		}
+	if (iter->size + meta_size > size + 2 * meta_size){
+		printf("3\n");
+		reuse_and_alloc(iter, size);
+		return iter->data;
 	}
-	printf("4\n");
-    void* p = sbrk(size + meta_size);
-	if ((void*) -1 == p){
-		perror("sbrk");
-		return NULL;
+	if (iter->size + meta_size >= size + meta_size) {
+		printf("4\n");
+		reuse(iter, size);
+		return iter->data; 
 	}
-	iter->next = (struct alloc_chunk*) p;
-	iter->next->size = size;
-	iter->next->free = 0;
-	iter->next->next = NULL;
-	iter->next->prev = iter;		
-	memset(iter->next->data, 0, size);
     return iter->next->data;
 }
 
@@ -102,8 +99,8 @@ void *mm_realloc(void *ptr, size_t size) {
 void mm_free(void *ptr) {
     /* YOUR CODE HERE */
     if (NULL != ptr){
-    	struct alloc_chunk* chunk_left = (struct alloc_chunk*) ptr - sizeof(struct alloc_chunk);
-    	chunk_left->free = 1;
+    	struct alloc_chunk* meta = (struct alloc_chunk*) ptr - meta_size;
+    	meta->free = 1;
     }
 }
 
