@@ -108,18 +108,21 @@ void *mm_realloc(void *ptr, size_t size) {
     }
     struct alloc_chunk* meta = (struct alloc_chunk*)(ptr - meta_size);
 	if (meta->next == NULL){
-		printf("here\n");
 		size_t extend = size - meta->size;
-		void* p = sbrk(extend);
-		if ((void*) -1 == p){
-			perror("sbrk");
-			return NULL;
+		if ((int)extend < 0){
+			meta->size = size;
+		} else {
+			void* p = sbrk(extend);
+			if ((void*) -1 == p){
+				perror("sbrk");
+				return NULL;
+			}
+			memset((meta->size)+ptr, 0, extend);
+			meta->size = size;	
+			output_list();
+			printf("---------\n");
 		}
-		memset((meta->size)+ptr, 0, extend);
-		meta->size = size;	
-		output_list();
-		printf("---------\n");
-	    return ptr;
+		return ptr;
 	} else {
 		void* tmp = mm_malloc(size);
 		if (tmp != NULL){
@@ -174,10 +177,8 @@ void coalesce(){
 			}
 			printf("start->next: %p\n", start->next);
 			if (!start->next){
-				printf("1\n");
 				return;
 			} else {
-				printf("2\n");
 				start = start->next;	
 			}
 		} else {
