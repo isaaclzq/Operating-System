@@ -135,7 +135,7 @@ void coalesce(struct alloc_chunk* iter){
 		iter = iter->next;
 	}
 	printf("address gets out of while: %p\n", iter);
-	if (iter->next->free == 1){
+	if (iter->next->free == 1 && iter->next != NULL){
 		if (iter->next->next){
 			iter->next->next->prev = iter;	
 		} 
