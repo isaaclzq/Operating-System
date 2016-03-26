@@ -11,7 +11,7 @@
 #include <string.h>
 
 static struct alloc_chunk* chunk;
-unsigned meta_size = sizeof(struct alloc_chunk);
+int meta_size = sizeof(struct alloc_chunk);
 
 
 int init(size_t size){
@@ -52,7 +52,6 @@ void *mm_malloc(size_t size) {
     if (chunk == NULL){
     	int succeed = init(size);
     	if (succeed){
-    		printf("init good\n");
     		return chunk->data;
     	} else {
     		return NULL;
@@ -60,6 +59,7 @@ void *mm_malloc(size_t size) {
     }
     // implementing first fit
     struct alloc_chunk* iter = chunk;
+    printf("1\n");
 	while (iter->free == 0 || iter->size < size){
 		if (NULL == iter->next){
 			printf("2\n");
@@ -99,7 +99,7 @@ void *mm_realloc(void *ptr, size_t size) {
 void mm_free(void *ptr) {
     /* YOUR CODE HERE */
     if (NULL != ptr){
-    	struct alloc_chunk* meta = (struct alloc_chunk*) ptr - meta_size;
+    	struct alloc_chunk* meta = ptr - meta_size;
     	meta->free = 1;
     }
 }
