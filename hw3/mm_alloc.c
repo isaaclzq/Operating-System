@@ -103,7 +103,11 @@ void *mm_malloc(size_t size) {
 
 void *mm_realloc(void *ptr, size_t size) {
     /* YOUR CODE HERE */
-    if (ptr == NULL || size == 0){
+    if (ptr == NULL && size >= 0){
+    	return mm_malloc(size);
+    }
+    if (ptr != NULL && size == 0){
+    	mm_free(ptr);
     	return NULL;
     }
     struct alloc_chunk* meta = (struct alloc_chunk*)(ptr - meta_size);
