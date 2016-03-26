@@ -35,12 +35,12 @@ void reuse(struct alloc_chunk* ptr, size_t size){
 	memset(ptr->data, 0, size);
 }
 
-void reuse_and_alloc(struct alloc_chunk* ptr, size_t size){
-	unsigned leftover = ptr->size - size;
+void reuse_and_alloc(void* ptr, size_t size){
+	unsigned leftover = ((struct alloc_chunk*)ptr)->size - size;
 	struct alloc_chunk* rest = ptr + meta_size + size;
 	reuse(ptr, size);
-	rest->next = ptr->next;
-	ptr->next = rest;
+	rest->next = ((struct alloc_chunk*)ptr)->next;
+	((struct alloc_chunk*)ptr)->next = rest;
 	rest->size = leftover;
 	rest->free = 1;
 	rest->prev = ptr;
@@ -62,11 +62,11 @@ void *mm_malloc(size_t size) {
     }
     // implementing first fit
     struct alloc_chunk* iter = chunk;
-    //printf("1\n");
+    printf("1\n");
 	while (iter->free == 0 || iter->size < size){
-		//printf("into while loop\n");
+		printf("into while loop\n");
 		if (NULL == iter->next){
-			//printf("2\n");
+			printf("2\n");
 			void* p = sbrk(size + meta_size);
 			if ((void*) -1 == p){
 				perror("sbrk");
@@ -78,21 +78,21 @@ void *mm_malloc(size_t size) {
 			iter->next->next = NULL;
 			iter->next->prev = iter;		
 			memset(iter->next->data, 0, size);
-			//output_list(chunk);
+			output_list(chunk);
 		    return iter->next->data;
 		}
 		iter = iter->next;
 	}
 	if (iter->size + meta_size >= size + 2 * meta_size){
-		//printf("3\n");
+		printf("3\n");
 		reuse_and_alloc(iter, size);
-		//output_list(chunk);
+		output_list(chunk);
 		return iter->data;
 	}
 	if (iter->size + meta_size >= size + meta_size && iter->size + meta_size < size + 2 * meta_size) {
-		//printf("4\n");
+		printf("4\n");
 		reuse(iter, size);
-		//output_list(chunk);
+		output_list(chunk);
 		return iter->data; 
 	}
     return iter->next->data;

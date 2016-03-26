@@ -22,5 +22,5 @@ struct alloc_chunk {
 
 int init(size_t size);
 void reuse(struct alloc_chunk*, size_t);
-void reuse_and_alloc(struct alloc_chunk* ptr, size_t size);
+void reuse_and_alloc(void* ptr, size_t size);
 void output_list(struct alloc_chunk*);
