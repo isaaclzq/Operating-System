@@ -49,6 +49,9 @@ void reuse_and_alloc(struct alloc_chunk* ptr, size_t size){
 
 void *mm_malloc(size_t size) {
     /* YOUR CODE HERE */
+    if (size == 0){
+    	return NULL;
+    }
     if (chunk == NULL){
     	int succeed = init(size);
     	if (succeed){
@@ -59,10 +62,11 @@ void *mm_malloc(size_t size) {
     }
     // implementing first fit
     struct alloc_chunk* iter = chunk;
-    printf("1\n");
+    //printf("1\n");
 	while (iter->free == 0 || iter->size < size){
+		//printf("into while loop\n");
 		if (NULL == iter->next){
-			printf("2\n");
+			//printf("2\n");
 			void* p = sbrk(size + meta_size);
 			if ((void*) -1 == p){
 				perror("sbrk");
@@ -74,18 +78,21 @@ void *mm_malloc(size_t size) {
 			iter->next->next = NULL;
 			iter->next->prev = iter;		
 			memset(iter->next->data, 0, size);
+			//output_list(chunk);
 		    return iter->next->data;
 		}
 		iter = iter->next;
 	}
-	if (iter->size + meta_size > size + 2 * meta_size){
-		printf("3\n");
+	if (iter->size + meta_size >= size + 2 * meta_size){
+		//printf("3\n");
 		reuse_and_alloc(iter, size);
+		//output_list(chunk);
 		return iter->data;
 	}
-	if (iter->size + meta_size >= size + meta_size) {
-		printf("4\n");
+	if (iter->size + meta_size >= size + meta_size && iter->size + meta_size < size + 2 * meta_size) {
+		//printf("4\n");
 		reuse(iter, size);
+		//output_list(chunk);
 		return iter->data; 
 	}
     return iter->next->data;
@@ -104,7 +111,21 @@ void mm_free(void *ptr) {
     }
 }
 
+void output_list(struct alloc_chunk* iter){
+	while (iter != NULL){
+		printf("current: %p, size: %ld, free: %d, prev: %p, next: %p\n", iter, iter->size, iter->free, iter->prev, iter->next);
+		iter = iter->next;
+	}
+}
 
+
+// struct alloc_chunk {
+// 	size_t size;
+// 	int free;
+// 	struct alloc_chunk* prev;
+// 	struct alloc_chunk* next;
+// 	char data[0];
+// };
 
 
 
