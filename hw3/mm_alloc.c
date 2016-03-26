@@ -136,9 +136,9 @@ void coalesce(struct alloc_chunk* iter){
 	}
 	printf("address gets out of while: %p\n", iter);
 	if (iter->next->free == 1){
-		if (iter->next->next){
-			iter->next->next->prev = iter;	
-		} 
+		// if (iter->next->next){
+		// 	iter->next->next->prev = iter;	
+		// } 
 		iter->size += meta_size + iter->next->size;
 		iter->next = iter->next->next;
 		memset(iter->data, 0, iter->size);
