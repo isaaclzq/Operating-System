@@ -78,7 +78,7 @@ void *mm_malloc(size_t size) {
 			iter->next->next = NULL;
 			iter->next->prev = iter;		
 			memset(iter->next->data, 0, size);
-			//output_list(chunk);
+			output_list();
 		    return iter->next->data;
 		}
 		iter = iter->next;
@@ -86,13 +86,13 @@ void *mm_malloc(size_t size) {
 	if (iter->size + meta_size >= size + 2 * meta_size){
 		printf("3\n");
 		reuse_and_alloc(iter, size);
-		//output_list(chunk);
+		output_list();
 		return iter->data;
 	}
 	if (iter->size + meta_size >= size + meta_size && iter->size + meta_size < size + 2 * meta_size) {
 		printf("4\n");
 		reuse(iter, size);
-		//output_list(chunk);
+		output_list();
 		return iter->data; 
 	}
     return iter->next->data;
@@ -108,11 +108,11 @@ void mm_free(void *ptr) {
     if (NULL != ptr){
     	struct alloc_chunk* meta = ptr - meta_size;
     	meta->free = 1;
-    	printf("layout: \n");
+    	printf("before layout: \n");
     	output_list();
     	printf("\n");
     	coalesce(chunk);
-    	printf("layout: \n");
+    	printf("after layout: \n");
     	output_list();
     	printf("\n");
     }
@@ -135,7 +135,7 @@ void coalesce(struct alloc_chunk* iter){
 		iter = iter->next;
 	}
 	printf("address gets out of while: %p\n", iter);
-	if (iter->next->free == 1 && iter->next != NULL){
+	if (iter->next->free == 1){
 		if (iter->next->next){
 			iter->next->next->prev = iter;	
 		} 
