@@ -57,7 +57,7 @@ void *mm_malloc(size_t size) {
     if (chunk == NULL){
     	int succeed = init(size);
     	if (succeed){
-    		output_list();
+    		//output_list();
     		return chunk->data;
     	} else {
     		return NULL;
@@ -81,7 +81,7 @@ void *mm_malloc(size_t size) {
 			iter->next->next = NULL;
 			iter->next->prev = iter;		
 			memset(iter->next->data, 0, size);
-			output_list();
+			//output_list();
 		    return iter->next->data;
 		}
 		iter = iter->next;
@@ -89,13 +89,13 @@ void *mm_malloc(size_t size) {
 	if (iter->size + meta_size >= size + 2 * meta_size){
 		//printf("3\n");
 		reuse_and_alloc(iter, size);
-		output_list();
+		//output_list();
 		return iter->data;
 	}
 	if (iter->size + meta_size >= size + meta_size && iter->size + meta_size < size + 2 * meta_size) {
 		//printf("4\n");
 		reuse(iter, size);
-		output_list();
+		//output_list();
 		return iter->data; 
 	}
     return iter->next->data;
@@ -123,8 +123,8 @@ void *mm_realloc(void *ptr, size_t size) {
 			}
 			memset((meta->size)+ptr, 0, extend);
 			meta->size = size;	
-			output_list();
-			printf("---------\n");
+			//output_list();
+			//printf("---------\n");
 		}
 		return ptr;
 	} else {
@@ -145,28 +145,28 @@ void *mm_realloc(void *ptr, size_t size) {
 void mm_free(void *ptr) {
     /* YOUR CODE HERE */
     if (NULL != ptr){
-    	printf("-------------------------\n");
-    	printf("freeing:\n");
-    	printf("before layout: \n");
-    	output_list();
-    	printf("\n");
+    	// printf("-------------------------\n");
+    	// printf("freeing:\n");
+    	// printf("before layout: \n");
+    	// output_list();
+    	// printf("\n");
     	struct alloc_chunk* meta = ptr - meta_size;
     	meta->free = 1;
     	coalesce();
-    	printf("after layout: \n");
-    	output_list();
-    	printf("\n");
-    	printf("-------------------------\n");
+    	// printf("after layout: \n");
+    	// output_list();
+    	// printf("\n");
+    	// printf("-------------------------\n");
     }
 }
 
-void output_list(void){
-	struct alloc_chunk* iter = chunk;
-	while (iter != NULL){
-		printf("current: %p, size: %ld, free: %d, prev: %p, next: %p\n", iter, iter->size, iter->free, iter->prev, iter->next);
-		iter = iter->next;
-	}
-}
+// void output_list(void){
+// 	struct alloc_chunk* iter = chunk;
+// 	while (iter != NULL){
+// 		printf("current: %p, size: %ld, free: %d, prev: %p, next: %p\n", iter, iter->size, iter->free, iter->prev, iter->next);
+// 		iter = iter->next;
+// 	}
+// }
 
 void coalesce(){
 	struct alloc_chunk* start = chunk;
@@ -179,7 +179,7 @@ void coalesce(){
 					start->next->prev = start;
 				}
 			}
-			printf("start->next: %p\n", start->next);
+			//printf("start->next: %p\n", start->next);
 			if (!start->next){
 				return;
 			} else {
