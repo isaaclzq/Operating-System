@@ -113,7 +113,7 @@ void mm_free(void *ptr) {
     	printf("before layout: \n");
     	output_list();
     	printf("\n");
-    	coalesce(chunk);
+    	coalesce();
     	printf("after layout: \n");
     	output_list();
     	printf("\n");
@@ -123,32 +123,31 @@ void mm_free(void *ptr) {
 void output_list(void){
 	struct alloc_chunk* iter = chunk;
 	while (iter != NULL){
-		printf("meta_size: %d\n", meta_size);
 		printf("current: %p, size: %ld, free: %d, prev: %p, next: %p\n", iter, iter->size, iter->free, iter->prev, iter->next);
 		iter = iter->next;
 	}
 }
 
-void coalesce(struct alloc_chunk* iter){
-	if (iter->next == NULL){
-		return;
+void coalesce(){
+	struct alloc_chunk* start = chunk;
+	while (start != NULL){
+		if (start->free == 1){
+			if (start->next && start->next->free == 1){
+				start->size += meta_size + start->next->size;
+				start->next = start->next->next;
+				if (start->next){
+					start->next->prev = start;
+				}
+			}
+			if (!start->next){
+				return;
+			} else {
+				start = start->next;	
+			}
+		} else {
+			start = start->next;
+		}
 	}
-	while (iter->next != NULL && iter->free == 0){
-		iter = iter->next;
-	}
-	printf("address gets out of while: %p\n", iter);
-	if (iter->next->free == 1){
-		if (iter->next->next){
-			iter->next->next->prev = iter;	
-		} 
-		iter->size += meta_size + iter->next->size;
-		iter->next = iter->next->next;
-		memset(iter->data, 0, iter->size);
-		coalesce(iter);
-	} else {
-		coalesce(iter->next);
-	}
-	
 }
 
 
