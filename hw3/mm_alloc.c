@@ -126,7 +126,7 @@ void *mm_realloc(void *ptr, size_t size) {
 	} else {
 		int* tmp = (int*) mm_malloc(size);
 		if (tmp != NULL){
-			struct alloc_chunk* new_meta = (struct alloc_chunk*)(tmp - meta_size);
+			struct alloc_chunk* new_meta = (struct alloc_chunk*)((void*)tmp - meta_size);
 			memset(new_meta->data, 0, new_meta->size);
 			memcpy(new_meta->data, meta->data, meta->size);
 			mm_free(ptr);
