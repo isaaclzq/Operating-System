@@ -109,9 +109,9 @@ void *mm_realloc(void *ptr, size_t size) {
     struct alloc_chunk* meta = (struct alloc_chunk*)(ptr - meta_size);
 	if (meta->next == NULL){
 		size_t extend = size - meta->size;
-		if ((int)extend < 0){
-			meta->size = size;
-		} else {
+		// if ((int)extend < 0){
+		// 	meta->size = size;
+		// } else {
 			void* p = sbrk(extend);
 			if ((void*) -1 == p){
 				perror("sbrk");
@@ -121,7 +121,7 @@ void *mm_realloc(void *ptr, size_t size) {
 			meta->size = size;	
 			output_list();
 			printf("---------\n");
-		}
+		// }
 		return ptr;
 	} else {
 		void* tmp = mm_malloc(size);
