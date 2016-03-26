@@ -65,11 +65,11 @@ void *mm_malloc(size_t size) {
     }
     // implementing first fit
     struct alloc_chunk* iter = chunk;
-    printf("1\n");
+    // /printf("1\n");
 	while (iter->free == 0 || iter->size < size){
-		printf("into while loop\n");
+		//printf("into while loop\n");
 		if (NULL == iter->next){
-			printf("2\n");
+			//printf("2\n");
 			void* p = sbrk(size + meta_size);
 			if ((void*) -1 == p){
 				perror("sbrk");
@@ -87,13 +87,13 @@ void *mm_malloc(size_t size) {
 		iter = iter->next;
 	}
 	if (iter->size + meta_size >= size + 2 * meta_size){
-		printf("3\n");
+		//printf("3\n");
 		reuse_and_alloc(iter, size);
 		output_list();
 		return iter->data;
 	}
 	if (iter->size + meta_size >= size + meta_size && iter->size + meta_size < size + 2 * meta_size) {
-		printf("4\n");
+		//printf("4\n");
 		reuse(iter, size);
 		output_list();
 		return iter->data; 
@@ -108,6 +108,7 @@ void *mm_realloc(void *ptr, size_t size) {
     }
     struct alloc_chunk* meta = (struct alloc_chunk*)(ptr - meta_size);
 	if (meta->next == NULL){
+		printf("here\n");
 		size_t extend = size - meta->size;
 		void* p = sbrk(extend);
 		if ((void*) -1 == p){
@@ -119,6 +120,17 @@ void *mm_realloc(void *ptr, size_t size) {
 		output_list();
 		printf("---------\n");
 	    return ptr;
+	} else {
+		void* tmp = mm_malloc(size);
+		if (tmp != NULL){
+			struct alloc_chunk* new_meta = (struct alloc_chunk*)(tmp - meta_size);
+			memset(new_meta->data, 0, new_meta->size);
+			memcpy(new_meta->data, meta->data, meta->size);
+			mm_free(ptr);
+			return new_meta->data;
+		} else {
+			return NULL;
+		}
 	}
 	return NULL;
 }
@@ -126,6 +138,8 @@ void *mm_realloc(void *ptr, size_t size) {
 void mm_free(void *ptr) {
     /* YOUR CODE HERE */
     if (NULL != ptr){
+    	printf("-------------------------\n");
+    	printf("freeing:\n");
     	printf("before layout: \n");
     	output_list();
     	printf("\n");
@@ -135,6 +149,7 @@ void mm_free(void *ptr) {
     	printf("after layout: \n");
     	output_list();
     	printf("\n");
+    	printf("-------------------------\n");
     }
 }
 
@@ -157,9 +172,12 @@ void coalesce(){
 					start->next->prev = start;
 				}
 			}
+			printf("start->next: %p\n", start->next);
 			if (!start->next){
+				printf("1\n");
 				return;
 			} else {
+				printf("2\n");
 				start = start->next;	
 			}
 		} else {
