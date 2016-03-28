@@ -10,7 +10,8 @@
 #include <unistd.h>
 #include <string.h>
 
-static struct alloc_chunk* chunk;
+//static struct alloc_chunk* chunk;
+struct alloc_chunk* chunk;
 int meta_size = sizeof(struct alloc_chunk);
 
 
