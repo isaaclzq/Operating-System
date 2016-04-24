@@ -202,7 +202,7 @@ void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_
     {
       if (tpcfollower_put(server, server->pending_key, server->pending_value) == 0)
       {
-        res->type = SUCCESS;
+        res->type = ACK;
       }
       else 
       {
