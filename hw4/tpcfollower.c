@@ -150,16 +150,17 @@ void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_
   msgtype_t service_type = req->type;
   if (service_type == PUTREQ) 
   {
-    if (tpcfollower_put(server, req->key, req->val) == 0) 
-    {
-      tpclog_log(&(server->log), service_type, req->key, req->val);
+    tpclog_clear_log(&server->log);
+    tpclog_log(&server->log, PUTREQ, req->key, req->val);
+    int success = tpcfollower_put_check(server, req->key, req->val);
+    if (success == 0) {
+      server->pending_msg = PUTREQ;
+      strcpy(server->pending_key, req->key);
+      strcpy(server->pending_value, req->val);
       res->type = VOTE;
       strcpy(res->body, MSG_COMMIT);
-    }
-    else 
-    {
+    } else {
       res->type = ERROR;
-      strcpy(res->body, ERRMSG_GENERIC_ERROR);
     }
   } 
   else if (service_type == DELREQ)
