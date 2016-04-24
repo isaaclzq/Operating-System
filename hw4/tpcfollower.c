@@ -150,30 +150,65 @@ void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_
   msgtype_t service_type = req->type;
   if (service_type == PUTREQ) 
   {
-    tpclog_clear_log(&server->log);
-    tpclog_log(&server->log, PUTREQ, req->key, req->val);
-    int success = tpcfollower_put_check(server, req->key, req->val);
-    if (success == 0) {
-      server->pending_msg = PUTREQ;
-      strcpy(server->pending_key, req->key);
-      strcpy(server->pending_value, req->val);
-      res->type = VOTE;
-      strcpy(res->body, MSG_COMMIT);
-    } else {
-      res->type = ERROR;
-    }
-  } 
-  else if (service_type == DELREQ)
-  {
-    if (tpcfollower_del(server, req->key) == 0)
+    if (tpcfollower_put_check(server, req->key, req->val) == 0 && server->state != TPC_WAIT) 
     {
       tpclog_log(&(server->log), service_type, req->key, req->val);
+      strcpy(server->pending_key, req->key);
+      strcpy(server->pending_value, req->val);
+      server->pending_msg = service_type;
+      server->state = TPC_WAIT;
       res->type = VOTE;
       strcpy(res->body, MSG_COMMIT);
     }
-    else {
+    else 
+    {
       res->type = ERROR;
-      strcpy(res->body, ERRMSG_GENERIC_ERROR);
+      strcpy(res->body, ERRMSG_INVALID_REQUEST);
+    }
+  } 
+  else if (service_type == GETREQ)
+  {
+    // if (tpcfollower_get(server, req->key, req->val) == 0 && server->state != TPC_WAIT) 
+    // {
+    //   tpclog_log(&(server->log), service_type, req->key, req->val);
+    //   strcpy(server->pending_key, req->key);
+    //   strcpy(server->pending_value, req->val);
+    //   server->pending_msg = service_type;
+    //   server->state = TPC_WAIT;
+    //   res->type = VOTE;
+    //   strcpy(res->body, MSG_COMMIT);
+    // }
+    // else 
+    // {
+    //   res->type = ERROR;
+    //   strcpy(res->body, ERRMSG_INVALID_REQUEST);
+    // }
+    tpclog_log(&(server->log), service_type, req->key, NULL);
+    if (tpcfollower_get(server, req->key, req->val) == 0)
+    {
+      res->type = GETRESP;
+      strcpy(res->body, req->val);
+    }
+    else 
+    {
+      res->type = ERROR;
+      strcpy(res->body, ERRMSG_NO_KEY);
+    }
+  }
+  else if (service_type == COMMIT)
+  {
+    tpclog_log(&(server->log), service_type, NULL, NULL);
+    if (server->state == TPC_WAIT && server->pending_msg == PUTREQ)
+    {
+      if (tpcfollower_put(server, server->pending_key, server->pending_value) == 0)
+      {
+        res->type = SUCCESS;
+      }
+      else 
+      {
+        res->type = ERROR;
+        strcpy(res->body, ERRMSG_GENERIC_ERROR);
+      }
     }
   }
 }
