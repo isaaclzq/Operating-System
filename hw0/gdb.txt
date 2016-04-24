@@ -1,0 +1,26 @@
+1. What is the value of argv?
+(char **) 0x7fffffffe638
+
+2. What is pointed to by argv?
+0x7fffffffe858 "/home/vagrant/code/personal/hw0/wc"
+
+3. What is the address of the function main?
+0x400c5d
+
+4. Try info stack.
+info stack prints the summary of how my program got where it is. For example, which functions are called cause the program gets where it is now.
+
+5. Try info frame.
+info frame prints 
+
+6. Try info registers.
+stack level 0: 0 is the current executing frame.
+frame at 0x7fffffffe530: the starting memory of this frame is 0x7fffffffe530
+rip = 0x400b18 in count (wc.c:56): register for next instruction
+saved rip = 0x400c84: return address
+called by frame at 0x7fffffffe560: address of the caller stack frame
+source language c: the language is being used
+Arglist at 0x7fffffffe520, args: file=0x7fffffffe87b "wc": starting address of arguments
+Locals at 0x7fffffffe520: address of local variables
+Previous frame's sp is 0x7fffffffe530: the starting memory address of the called stack frame
+Saved registers: rbp at 0x7fffffffe520, rip at 0x7fffffffe528 : address of rbp and rip register. rip register contains rip address. rbp register contains the starting address of the locals of this stack frame.

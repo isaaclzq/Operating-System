@@ -9,8 +9,11 @@
 #include <sys/wait.h>
 #include <termios.h>
 #include <unistd.h>
-
 #include "tokenizer.h"
+#include <sys/stat.h>
+#include <fcntl.h>
+
+
 
 /* Whether the shell is connected to an actual terminal or not. */
 bool shell_is_interactive;
@@ -26,6 +29,9 @@ pid_t shell_pgid;
 
 int cmd_exit(struct tokens *tokens);
 int cmd_help(struct tokens *tokens);
+int cmd_pwd(struct tokens *tokens);
+int cmd_cd(struct tokens *tokens);
+int cmd_wait(struct tokens *tokens);
 
 /* Built-in command functions take token array (see parse.h) and return int */
 typedef int cmd_fun_t(struct tokens *tokens);
@@ -40,6 +46,9 @@ typedef struct fun_desc {
 fun_desc_t cmd_table[] = {
   {cmd_help, "?", "show this help menu"},
   {cmd_exit, "exit", "exit the command shell"},
+  {cmd_pwd, "pwd", "print current working directory"},
+  {cmd_cd, "cd", "change directory"},
+  {cmd_wait, "wait", "wait for children"}
 };
 
 /* Prints a helpful description for the given command */
@@ -52,6 +61,29 @@ int cmd_help(struct tokens *tokens) {
 /* Exits this shell */
 int cmd_exit(struct tokens *tokens) {
   exit(0);
+}
+
+int cmd_pwd(struct tokens *tokens) {
+  char my_cwd[2048];
+  getcwd(my_cwd, 2048);
+  printf("%s\n", my_cwd);
+  return 1;
+}
+
+int cmd_cd(struct tokens *tokens) {
+  char *dir = tokens_get_token(tokens, 1);
+  chdir(dir);
+  return 1; 
+}
+
+int cmd_wait(struct tokens *tokens) {
+  int child_pid;
+  while (child_pid = wait(NULL)) {
+    if (errno == ECHILD) {
+      break;
+    }
+  }
+  return 0;
 }
 
 /* Looks up the built-in command, if it exists. */
@@ -104,13 +136,93 @@ int main(int argc, char *argv[]) {
 
     /* Find which built-in function to run. */
     int fundex = lookup(tokens_get_token(tokens, 0));
+    shell_pgid = getpid();
 
     if (fundex >= 0) {
       cmd_table[fundex].fun(tokens);
     } else {
-      /* REPLACE this to run commands as programs. */
-      fprintf(stdout, "This shell doesn't know how to run programs.\n");
-    }
+      int my_pid, newfd, check_command, index = 0, wait_flag = 0;
+      char *name = "PATH";
+      char *space = " ";
+      char *redr_out = ">";
+      char *redr_in = "<";
+      char *bg = "&";
+      int flag = 0;
+      my_pid = fork();
+      if (my_pid == 0) {
+        char *parmList[tokens_get_length(tokens)+1];
+        int x;
+        for (x = 0; x < tokens_get_length(tokens); x++){
+          if (strcmp(tokens_get_token(tokens, x), redr_out) == 0){
+            flag = 1;
+            index = x;
+            break;
+          } else if (strcmp(tokens_get_token(tokens, x), redr_in) == 0){
+            flag = 2;
+            index = x;
+            break;
+          } else if (strcmp(tokens_get_token(tokens, x), bg) == 0){
+            parmList[x] = NULL;
+            wait_flag = 1;
+            break;
+          }
+          parmList[x] = tokens_get_token(tokens, x);
+        }
+
+        if (index != 0){
+          if (flag == 1){
+            for (; index < tokens_get_length(tokens); index++){
+              parmList[index] = NULL;
+            }
+            if ((newfd = open(tokens_get_token(tokens, x+1), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)) < 0) {
+              perror(tokens_get_token(tokens, x+1));
+              exit(1);
+            }     
+            dup2(newfd, 1);
+          } else {
+            for (; index < tokens_get_length(tokens); index++){
+              parmList[index] = NULL;
+            }
+            if ((newfd = open(tokens_get_token(tokens, x+1), O_RDWR)) < 0){
+              exit(1);
+            }
+            dup2(newfd, STDIN_FILENO);
+          }
+        }
+        parmList[tokens_get_length(tokens)] = NULL;
+        check_command = execv(tokens_get_token(tokens, 0), parmList);  
+        // relative path for command
+        if (check_command == -1){
+          char *path = getenv(name);
+          char *delim = ":";
+          char *new_delim = "/";
+          char *addr = strtok(path, delim);
+          struct stat st;
+          while (addr != NULL){
+            char abs_path[2048];
+            memset(&abs_path[0], 0, sizeof(abs_path));
+            strncpy(abs_path, addr, strlen(addr));
+            strncat(abs_path, new_delim, strlen(new_delim));
+            strncat(abs_path, tokens_get_token(tokens, 0), strlen(tokens_get_token(tokens, 0)));
+            int result = stat(abs_path, &st);
+            if (result == 0) {
+              execv(abs_path, parmList);
+              break;
+            }
+            addr = strtok(NULL, delim);
+          }
+          exit(EXIT_SUCCESS);
+        }  
+        exit(EXIT_SUCCESS);
+      } 
+      else if (my_pid < 0) {
+        exit(EXIT_FAILURE);
+        } 
+      else {
+        signal(SIGINT, SIG_IGN);
+        if (wait_flag) wait(NULL);
+        }
+      }
 
     if (shell_is_interactive)
       /* Please only print shell prompts when standard input is not a tty */
