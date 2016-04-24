@@ -117,10 +117,64 @@ int tpcfollower_del(tpcfollower_t *server, char *key) {
  * be able to recreate the current state of the server upon recovering from
  * failure. See the spec for details on logic and error messages.
  */
+
+/*
+typedef struct {
+  msgtype_t type;
+  char key[MAX_KEYLEN + 1]; // May be NULL, depending on type.
+  char val[MAX_VALLEN + 1]; // May be NULL, depending on type.
+} kvrequest_t;
+
+typedef struct {
+  msgtype_t type;
+  char body[KVRES_BODY_MAX_SIZE + 1]; // May be NULL, depending on type.
+} kvresponse_t;
+*/
+
+// typedef struct tpcfollower {
+//   kvstore_t store; /* The store this server will use. */
+//   tpclog_t log;    /* The log this server will use. */
+//   tpc_state_t state;
+//   msgtype_t pending_msg;
+//   char pending_key[MAX_KEYLEN + 1];
+//   char pending_value[MAX_VALLEN + 1];
+//   int max_threads;   /* The max threads this server will run on. */
+//   int listening;     /* 1 if this server is currently listening for requests, else 0. */
+//   int sockfd;        /* The socket fd this server is currently listening on (if any).  */
+//   int port;          /* The port this server should listen on. */
+//   char hostname[64]; /* The host this server should listen on. */
+// } tpcfollower_t; 
+
 void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_t *res) {
   /* TODO: Implement me! */
-  res->type = ERROR;
-  strcpy(res->body, ERRMSG_NOT_IMPLEMENTED);
+  msgtype_t service_type = req->type;
+  if (service_type == PUTREQ) 
+  {
+    if (tpcfollower_put(server, req->key, req->val) == 0) 
+    {
+      tpclog_log(&(server->log), service_type, req->key, req->val);
+      res->type = VOTE;
+      strcpy(res->body, MSG_COMMIT);
+    }
+    else 
+    {
+      res->type = ERROR;
+      strcpy(res->body, ERRMSG_GENERIC_ERROR);
+    }
+  } 
+  else if (service_type == DELREQ)
+  {
+    if (tpcfollower_del(server, req->key) == 0)
+    {
+      tpclog_log(&(server->log), service_type, req->key, req->val);
+      res->type = VOTE;
+      strcpy(res->body, MSG_COMMIT);
+    }
+    else {
+      res->type = ERROR;
+      strcpy(res->body, ERRMSG_GENERIC_ERROR);
+    }
+  }
 }
 
 /* Generic entrypoint for this SERVER. Takes in a socket on SOCKFD, which
