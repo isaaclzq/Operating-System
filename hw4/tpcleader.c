@@ -135,14 +135,43 @@ follower_t *tpcleader_get_successor(tpcleader_t *leader, follower_t *predecessor
   return result;
 }
 
+/*
+typedef struct {
+  msgtype_t type;
+  char key[MAX_KEYLEN + 1]; // May be NULL, depending on type.
+  char val[MAX_VALLEN + 1]; // May be NULL, depending on type.
+} kvrequest_t;
+
+typedef struct {
+  msgtype_t type;
+  char body[KVRES_BODY_MAX_SIZE + 1]; // May be NULL, depending on type.
+} kvresponse_t;
+*/
+
+// typedef struct tpcleader {
+//   unsigned int follower_capacity; /* The number of followers this leader will use. */
+//   unsigned int follower_count;    /* The current number of followers this leader is aware of. */
+//   unsigned int redundancy;        /* The number of followers a single value will be stored on. */
+//   follower_t *followers_head;     /* The head of the list of followers. */
+//   pthread_rwlock_t follower_lock; /* A lock used to protect the list of followers. */
+// } tpcleader_t;
+
+
 /* Handles an incoming GET request REQ, and populates response RES. REQ and
  * RES both must point to valid kvrequest_t and kvrespont_t structs,
  * respectively.
  */
 void tpcleader_handle_get(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *res) {
   /* TODO: Implement me! */
-  res->type = ERROR;
-  strcpy(res->body, ERRMSG_NOT_IMPLEMENTED);
+  // msgtype_t service_type = req->type;
+  // if (service_type == GETREQ) 
+  // {
+    
+  // }
+  // else {
+    res->type = ERROR;
+    strcpy(res->body, ERRMSG_INVALID_REQUEST);
+  // }
 }
 
 /* Handles an incoming TPC request REQ, and populates RES as a response.
