@@ -202,20 +202,20 @@ void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_
     {
       res->type = ACK;
     }
-    // else if (server->state == TPC_READY && server->pending_msg == DELREQ)
-    // {
-    //   if (tpcfollower_del(server, server->pending_key) == 0)
-    //   {
-    //     memset(server->pending_value, 0, MAX_VALLEN+1);
-    //     server->state = TPC_COMMIT;
-    //     res->type = ACK;
-    //   }
-    //   else 
-    //   {
-    //     res->type = ERROR;
-    //     strcpy(res->body, ERRMSG_NO_KEY);
-    //   }
-    // }
+    else if (server->state == TPC_READY && server->pending_msg == DELREQ)
+    {
+      if (tpcfollower_del(server, server->pending_key) == 0)
+      {
+        memset(server->pending_value, 0, MAX_VALLEN+1);
+        server->state = TPC_COMMIT;
+        res->type = ACK;
+      }
+      else 
+      {
+        res->type = ERROR;
+        strcpy(res->body, ERRMSG_NO_KEY);
+      }
+    }
   }
   else if (service_type == ABORT)
   {
