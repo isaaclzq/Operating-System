@@ -184,6 +184,7 @@ void tpcleader_handle_get(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *r
       {
         break;
       }
+      follower = tpcleader_get_successor(leader, follower);
     }
   }
   else 
