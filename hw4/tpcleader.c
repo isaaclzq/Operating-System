@@ -186,6 +186,7 @@ void tpcleader_handle_get(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *r
       }
       follower = tpcleader_get_successor(leader, follower);
     }
+    res->type = GETREQ;
   }
   else 
   {
@@ -209,8 +210,55 @@ void tpcleader_handle_tpc(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *r
     return;
   }
   /* TODO: Implement me! */
-  res->type = ERROR;
-  strcpy(res->body, ERRMSG_NOT_IMPLEMENTED);
+  int i = 0;
+  int follower_fd;
+  bool received;
+  msgtype_t phase1_result = COMMIT;
+  follower_t *follower = tpcleader_get_primary(leader, req->key);
+  for (; i < leader->redundancy-1; i++)
+  {
+    follower_fd = connect_to(follower->host, follower->port, TIMEOUT);
+    if (follower_fd != -1)
+    {
+      kvrequest_send(req, follower_fd);
+      kvresponse_receive(res, follower_fd);
+      if (res->type == ABORT)
+      {
+        req->type = phase1_result = ABORT;
+        break;
+      }
+      follower = tpcleader_get_successor(leader, follower);
+    } 
+    else 
+    {
+      req->type = phase1_result = ABORT;
+      break;
+    }
+  }
+  if (phase1_result != ABORT){ req->type = phase1_result;}
+
+  follower = tpcleader_get_primary(leader, req->key);
+  for (i = 0; i < leader->redundancy-1; i++)
+  {
+    while (true)
+    {
+      follower_fd = connect_to(follower->host, follower->port, TIMEOUT);
+      if (follower_fd != -1)
+      {
+        break;
+      }
+    }
+    while (true)
+    {
+      kvrequest_send(req, follower_fd);
+      kvresponse_receive(res, follower_fd);
+      if (res->type == ACK) { break; }
+    }
+    follower = tpcleader_get_successor(leader, follower); 
+  }
+
+  res->type = SUCCESS;
+  //strcpy(res->body, ERRMSG_NOT_IMPLEMENTED);
 }
 
 /* Generic entrypoint for this LEADER. Takes in a socket on SOCKFD, which
