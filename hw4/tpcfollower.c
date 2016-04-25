@@ -198,10 +198,9 @@ void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_
         strcpy(res->body, ERRMSG_GENERIC_ERROR);
       }
     }
-    else
+    else if (server->state == TPC_COMMIT)
     {
-      res->type = ERROR;
-      strcpy(res->body, ERRMSG_INVALID_REQUEST);
+      res->type = ACK;
     }
     // else if (server->state == TPC_READY && server->pending_msg == DELREQ)
     // {
