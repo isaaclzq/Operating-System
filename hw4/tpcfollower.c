@@ -11,6 +11,7 @@
 #include "index.h"
 #include "tpclog.h"
 #include "socket_server.h"
+#include <string.h>
 
 /* Initializes a tpcfollower. Will return 0 if successful, or a negative error
  * code if not. DIRNAME is the directory which should be used to store entries
@@ -198,10 +199,6 @@ void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_
         strcpy(res->body, ERRMSG_GENERIC_ERROR);
       }
     }
-    else if (server->state == TPC_COMMIT)
-    {
-      res->type = ACK;
-    }
     else if (server->state == TPC_READY && server->pending_msg == DELREQ)
     {
       if (tpcfollower_del(server, server->pending_key) == 0)
@@ -214,6 +211,40 @@ void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_
       {
         res->type = ERROR;
         strcpy(res->body, ERRMSG_NO_KEY);
+      }
+    }
+    else if (server->state == TPC_COMMIT)
+    {
+      res->type = ACK;
+    }
+    else 
+    {
+      tpclog_iterate_begin(&(server->log));
+      if (tpclog_iterate_has_next(&(server->log)))
+      {
+        logentry_t* entry = (logentry_t*) malloc(sizeof(logentry_t));
+        if (NULL != entry)
+        {
+          logentry_t* log_entry = tpclog_iterate_next(&(server->log), entry);
+          if (entry->type == PUTREQ)
+          {
+            char* save;
+            char* save1;
+            char* delim = '\0';
+            char* key = strtok_r(log_entry->data, delim, &save);
+            char* value = strtok_r(save, delim, &save1);
+            if (tpcfollower_put(server, key, value) == 0)
+            {
+              server->state = TPC_COMMIT;
+              res->type = ACK;
+            }
+            else 
+            {
+              res->type = ERROR;
+              strcpy(res->body, ERRMSG_GENERIC_ERROR);
+            }
+          }
+        }
       }
     }
   }
