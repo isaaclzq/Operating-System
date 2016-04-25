@@ -187,6 +187,9 @@ void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_
     {
       if (tpcfollower_put(server, server->pending_key, server->pending_value) == 0)
       {
+        memset(server->pending_value, 0, MAX_VALLEN+1);
+        memset(server->pending_key, 0, MAX_KEYLEN+1);
+        server->state = TPC_COMMIT;
         res->type = ACK;
       }
       else 
@@ -195,14 +198,46 @@ void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_
         strcpy(res->body, ERRMSG_GENERIC_ERROR);
       }
     }
+    else if (server->state == TPC_READY && server->pending_msg == DELREQ)
+    {
+      if (tpcfollower_del(server, server->pending_key) == 0)
+      {
+        memset(server->pending_value, 0, MAX_VALLEN+1);
+        server->state = TPC_COMMIT;
+        res->type = ACK;
+      }
+      else 
+      {
+        res->type = ERROR;
+        strcpy(res->body, ERRMSG_NO_KEY);
+      }
+    }
   }
   else if (service_type == ABORT)
   {
     tpclog_log(&(server->log), service_type, NULL, NULL);
     memset(server->pending_value, 0, MAX_VALLEN+1);
     memset(server->pending_key, 0, MAX_KEYLEN+1);
-    server->pending_msg = service_type;
+    server->state = TPC_ABORT;
     res->type = ACK;
+  }
+  else if (service_type == DELREQ)
+  {
+    tpclog_log(&(server->log), service_type, req->key, NULL);
+    if (tpcfollower_del_check(server, req->key) == 0 && server->state != TPC_READY) 
+    {
+      strcpy(server->pending_key, req->key);
+      memset(server->pending_value, 0, MAX_VALLEN+1);
+      server->pending_msg = service_type;
+      server->state = TPC_READY;
+      res->type = VOTE;
+      strcpy(res->body, MSG_COMMIT);
+    }
+    else 
+    {
+      res->type = ERROR;
+      strcpy(res->body, ERRMSG_INVALID_REQUEST);
+    }
   }
 }
 
