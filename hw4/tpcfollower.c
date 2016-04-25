@@ -230,7 +230,7 @@ void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_
       memset(server->pending_value, 0, MAX_VALLEN+1);
       server->pending_msg = service_type;
       server->state = TPC_READY;
-      res->type = VOTE;
+      res->type = ACK;
       strcpy(res->body, MSG_COMMIT);
     }
     else 
