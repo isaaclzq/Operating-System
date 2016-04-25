@@ -225,24 +225,24 @@ void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_
     server->state = TPC_ABORT;
     res->type = ACK;
   }
-  // else if (service_type == DELREQ)
-  // {
-  //   tpclog_log(&(server->log), service_type, req->key, NULL);
-  //   if (tpcfollower_del_check(server, req->key) == 0 && server->state != TPC_READY) 
-  //   {
-  //     strcpy(server->pending_key, req->key);
-  //     memset(server->pending_value, 0, MAX_VALLEN+1);
-  //     server->pending_msg = service_type;
-  //     server->state = TPC_READY;
-  //     res->type = VOTE;
-  //     strcpy(res->body, MSG_COMMIT);
-  //   }
-  //   else 
-  //   {
-  //     res->type = ERROR;
-  //     strcpy(res->body, ERRMSG_INVALID_REQUEST);
-  //   }
-  // }
+  else if (service_type == DELREQ)
+  {
+    tpclog_log(&(server->log), service_type, req->key, NULL);
+    if (tpcfollower_del_check(server, req->key) == 0 && server->state != TPC_READY) 
+    {
+      strcpy(server->pending_key, req->key);
+      memset(server->pending_value, 0, MAX_VALLEN+1);
+      server->pending_msg = service_type;
+      server->state = TPC_READY;
+      res->type = VOTE;
+      strcpy(res->body, MSG_COMMIT);
+    }
+    else 
+    {
+      res->type = ERROR;
+      strcpy(res->body, ERRMSG_INVALID_REQUEST);
+    }
+  }
 }
 
 /* Generic entrypoint for this SERVER. Takes in a socket on SOCKFD, which
