@@ -213,14 +213,14 @@ void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_
     //   }
     // }
   }
-  // else if (service_type == ABORT)
-  // {
-  //   tpclog_log(&(server->log), service_type, NULL, NULL);
-  //   memset(server->pending_value, 0, MAX_VALLEN+1);
-  //   memset(server->pending_key, 0, MAX_KEYLEN+1);
-  //   server->state = TPC_ABORT;
-  //   res->type = ACK;
-  // }
+  else if (service_type == ABORT)
+  {
+    tpclog_log(&(server->log), service_type, NULL, NULL);
+    memset(server->pending_value, 0, MAX_VALLEN+1);
+    memset(server->pending_key, 0, MAX_KEYLEN+1);
+    server->state = TPC_ABORT;
+    res->type = ACK;
+  }
   // else if (service_type == DELREQ)
   // {
   //   tpclog_log(&(server->log), service_type, req->key, NULL);
