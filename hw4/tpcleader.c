@@ -163,15 +163,35 @@ typedef struct {
  */
 void tpcleader_handle_get(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *res) {
   /* TODO: Implement me! */
-  // msgtype_t service_type = req->type;
-  // if (service_type == GETREQ) 
-  // {
-    
-  // }
-  // else {
+  msgtype_t service_type = req->type;
+  if (service_type == GETREQ)
+  {
+    int i = 0;
+    int follower_fd;
+    int byte;
+    bool received;
+    follower_t *follower = tpcleader_get_primary(leader, req->key);
+    for (; i < leader->redundancy-1; i++)
+    {
+      follower_fd = connect_to(follower->host, follower->port, TIMEOUT);
+      byte = kvrequest_send(req, follower_fd);
+      // if (byte == 1)
+      // {
+      //   res->type = ERROR;
+      //   strcpy(res->body, )
+      // }
+      if (kvresponse_receive(res, follower_fd))
+      {
+        break;
+      }
+      follower = tpcleader_get_successor(leader, follower);
+    }
+  }
+  else 
+  {
     res->type = ERROR;
-    strcpy(res->body, ERRMSG_INVALID_REQUEST);
-  // }
+    strcpy(res->body, ERRMSG_INVALID_REQUEST);  
+  }
 }
 
 /* Handles an incoming TPC request REQ, and populates RES as a response.
