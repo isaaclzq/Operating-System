@@ -150,9 +150,9 @@ void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_
   msgtype_t service_type = req->type;
   if (service_type == PUTREQ) 
   {
+    tpclog_log(&(server->log), service_type, req->key, req->val);
     if (tpcfollower_put_check(server, req->key, req->val) == 0 && server->state != TPC_READY) 
     {
-      tpclog_log(&(server->log), service_type, req->key, req->val);
       strcpy(server->pending_key, req->key);
       strcpy(server->pending_value, req->val);
       server->pending_msg = service_type;
@@ -187,7 +187,6 @@ void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_
     {
       if (tpcfollower_put(server, server->pending_key, server->pending_value) == 0)
       {
-
         res->type = ACK;
       }
       else 
@@ -196,6 +195,14 @@ void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_
         strcpy(res->body, ERRMSG_GENERIC_ERROR);
       }
     }
+  }
+  else if (service_type == ABORT)
+  {
+    tpclog_log(&(server->log), service_type, NULL, NULL);
+    memset(server->pending_value, 0, MAX_VALLEN+1);
+    memset(server->pending_key, 0, MAX_KEYLEN+1);
+    server->pending_msg = service_type;
+    res->type = ACK;
   }
 }
 
