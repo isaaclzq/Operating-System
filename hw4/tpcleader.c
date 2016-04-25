@@ -186,7 +186,6 @@ void tpcleader_handle_get(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *r
       }
       follower = tpcleader_get_successor(leader, follower);
     }
-    res->type = GETREQ;
   }
   else 
   {
@@ -256,9 +255,7 @@ void tpcleader_handle_tpc(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *r
     }
     follower = tpcleader_get_successor(leader, follower); 
   }
-
   res->type = SUCCESS;
-  //strcpy(res->body, ERRMSG_NOT_IMPLEMENTED);
 }
 
 /* Generic entrypoint for this LEADER. Takes in a socket on SOCKFD, which
