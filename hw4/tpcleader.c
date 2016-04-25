@@ -180,7 +180,7 @@ void tpcleader_handle_get(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *r
       //   res->type = ERROR;
       //   strcpy(res->body, )
       // }
-      if (kvresponse_receive(res, follower_fd))
+      if (kvresponse_receive(res, follower_fd) && res->body == VOTE)
       {
         break;
       }
