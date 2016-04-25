@@ -217,36 +217,6 @@ void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_
     {
       res->type = ACK;
     }
-    else 
-    {
-      tpclog_iterate_begin(&(server->log));
-      if (tpclog_iterate_has_next(&(server->log)))
-      {
-        logentry_t* entry = (logentry_t*) malloc(sizeof(logentry_t));
-        if (NULL != entry)
-        {
-          logentry_t* log_entry = tpclog_iterate_next(&(server->log), entry);
-          if (entry->type == PUTREQ)
-          {
-            char* save;
-            char* save1;
-            char* delim = '\0';
-            char* key = strtok_r(log_entry->data, delim, &save);
-            char* value = strtok_r(save, delim, &save1);
-            if (tpcfollower_put(server, key, value) == 0)
-            {
-              server->state = TPC_COMMIT;
-              res->type = ACK;
-            }
-            else 
-            {
-              res->type = ERROR;
-              strcpy(res->body, ERRMSG_GENERIC_ERROR);
-            }
-          }
-        }
-      }
-    }
   }
   else if (service_type == ABORT)
   {
