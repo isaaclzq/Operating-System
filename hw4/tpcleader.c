@@ -174,17 +174,20 @@ void tpcleader_handle_get(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *r
     for (; i < leader->redundancy-1; i++)
     {
       follower_fd = connect_to(follower->host, follower->port, TIMEOUT);
-      byte = kvrequest_send(req, follower_fd);
+      if (follower_fd != -1)
+      {
+        byte = kvrequest_send(req, follower_fd);
       // if (byte == 1)
       // {
       //   res->type = ERROR;
       //   strcpy(res->body, )
       // }
-      if (kvresponse_receive(res, follower_fd) && res->body == VOTE)
-      {
-        break;
-      }
-      follower = tpcleader_get_successor(leader, follower);
+        if (kvresponse_receive(res, follower_fd) && res->body == VOTE)
+        {
+          break;
+        }
+        follower = tpcleader_get_successor(leader, follower);  
+      }    
     }
   }
   else 
