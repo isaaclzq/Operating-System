@@ -171,7 +171,7 @@ void tpcleader_handle_get(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *r
     int byte;
     bool received;
     follower_t *follower = tpcleader_get_primary(leader, req->key);
-    for (; i < leader->redundancy-1; i++)
+    for (; i < leader->redundancy; i++)
     {
       follower_fd = connect_to(follower->host, follower->port, TIMEOUT);
       if (follower_fd != -1)
@@ -217,7 +217,7 @@ void tpcleader_handle_tpc(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *r
   bool received;
   msgtype_t phase1_result = COMMIT;
   follower_t *follower = tpcleader_get_primary(leader, req->key);
-  for (; i < leader->redundancy-1; i++)
+  for (; i < leader->redundancy; i++)
   {
     follower_fd = connect_to(follower->host, follower->port, TIMEOUT);
     if (follower_fd != -1)
@@ -240,7 +240,7 @@ void tpcleader_handle_tpc(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *r
   if (phase1_result != ABORT){ req->type = phase1_result;}
 
   follower = tpcleader_get_primary(leader, req->key);
-  for (i = 0; i < leader->redundancy-1; i++)
+  for (i = 0; i < leader->redundancy; i++)
   {
     while (true)
     {
