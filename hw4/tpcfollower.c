@@ -291,50 +291,56 @@ void tpcfollower_handle(tpcfollower_t *server, int sockfd) {
 int tpcfollower_rebuild_state(tpcfollower_t *server) {
   /* TODO: Implement me! */
   logentry_t* entry = (logentry_t*) malloc(sizeof(logentry_t));
-  kvrequest_t* fake_request = (kvrequest_t*) malloc(sizeof(kvrequest_t));
-  int length = 0;
-  int len1 = 0;
-  int len2 = 0;
-  int trial = 0;
-  if (NULL == fake_request)
-  {
-    return -1;
-  }
-  kvresponse_t* fake_response = (kvresponse_t*) malloc(sizeof(kvresponse_t));
-  if (NULL == fake_response)
-  {
-    return -1;
-  }
-  memset(fake_request, 0, sizeof(kvrequest_t));
-  memset(fake_response, 0, sizeof(kvresponse_t));
+  // kvrequest_t* fake_request = (kvrequest_t*) malloc(sizeof(kvrequest_t));
+  // int length = 0;
+  // int len1 = 0;
+  // int len2 = 0;
+  // int trial = 0;
+  // if (NULL == fake_request)
+  // {
+  //   return -1;
+  // }
+  // kvresponse_t* fake_response = (kvresponse_t*) malloc(sizeof(kvresponse_t));
+  // if (NULL == fake_response)
+  // {
+  //   return -1;
+  // }
+  // memset(fake_request, 0, sizeof(kvrequest_t));
+  // memset(fake_response, 0, sizeof(kvresponse_t));
   if (NULL == entry)
   {
     return -1;
   }
   tpclog_iterate_begin(&(server->log));
+  int index = 0;
   while (tpclog_iterate_has_next(&(server->log)))
   {
     //logentry_t *tpclog_iterate_next(tpclog_t *log, logentry_t *entry)
     entry = tpclog_iterate_next(&(server->log), entry);
-    fake_request->type = entry->type;
-    while (length < entry->length && trial < 2)
+    if (entry->type == PUTREQ)
     {
-      if (entry->data[length] == '\0' && trial == 0)
+      server->pending_msg = PUTREQ;
+      server->state = TPC_READY;
+      while (index < entry->length)
       {
-        len1 = length;
-        trial++;
+        if (entry->data[index] == '\0')
+        {
+          index++;
+          break;
+        }
+        server->pending_key[index] = entry->data[index];
+        index++;
       }
-      else if (entry->data[length] == '\0' && trial == 1)
+      while (index < entry->length)
       {
-        len2 = length - len1;
-        trial++;
-        break;
+        if (entry->data[index] == '\0')
+        {
+          break;
+        }
+        server->pending_value[index] = entry->data[index];
+        index++;
       }
-      length++;
     }
-    strncpy(fake_request->key, entry->data, len1);
-    strncpy(fake_request->val, &entry->data[len1], len2);
-    tpcfollower_handle_tpc(server, fake_request, fake_response);
   }
   return 1;
 }
