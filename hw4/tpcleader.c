@@ -243,7 +243,7 @@ void phase1(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *res)
     }
   }
   if (vote_counter != leader->redundancy) { req->type = ABORT; }
-  if (res->type != ABORT) { req->type = COMMIT; }
+  if (req->type != ABORT) { req->type = COMMIT; }
 }
 
 void phase2(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *res) 
