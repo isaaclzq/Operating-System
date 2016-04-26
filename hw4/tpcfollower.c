@@ -292,7 +292,15 @@ int tpcfollower_rebuild_state(tpcfollower_t *server) {
   /* TODO: Implement me! */
   logentry_t* entry = (logentry_t*) malloc(sizeof(logentry_t));
   kvrequest_t* fake_request = (kvrequest_t*) malloc(sizeof(kvrequest_t));
+  if (NULL == fake_request)
+  {
+    return -1;
+  }
   kvresponse_t* fake_response = (kvresponse_t*) malloc(sizeof(kvresponse_t));
+  if (NULL == fake_response)
+  {
+    return -1;
+  }
   char* saved;
   char* delim = '\0';
   char* key;
@@ -308,12 +316,12 @@ int tpcfollower_rebuild_state(tpcfollower_t *server) {
   {
     //logentry_t *tpclog_iterate_next(tpclog_t *log, logentry_t *entry)
     entry = tpclog_iterate_next(&(server->log), entry);
-    fake_request->type = entry->type;
-    key = strtok_r(entry->data, delim, &saved);
-    value = strtok_r(NULL, delim, &saved);
-    strcpy(fake_request->key, key);
-    strcpy(fake_request->val, value);
-    tpcfollower_handle_tpc(server, fake_request, fake_response);
+    // fake_request->type = entry->type;
+    // key = strtok_r(entry->data, delim, &saved);
+    // value = strtok_r(NULL, delim, &saved);
+    // strcpy(fake_request->key, key);
+    // strcpy(fake_request->val, value);
+    // tpcfollower_handle_tpc(server, fake_request, fake_response);
   }
   return 1;
 }
