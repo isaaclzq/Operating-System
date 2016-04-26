@@ -313,8 +313,8 @@ int tpcfollower_rebuild_state(tpcfollower_t *server) {
   }
   tpclog_iterate_begin(&(server->log));
   int index = 0;
-  while (tpclog_iterate_has_next(&(server->log)))
-  {
+  // while (tpclog_iterate_has_next(&(server->log)))
+  // {
     //logentry_t *tpclog_iterate_next(tpclog_t *log, logentry_t *entry)
     entry = tpclog_iterate_next(&(server->log), entry);
     if (entry->type == PUTREQ)
@@ -341,7 +341,7 @@ int tpcfollower_rebuild_state(tpcfollower_t *server) {
         index++;
       }
     }
-  }
+  // }
   return 1;
 }
 
