@@ -316,31 +316,34 @@ int tpcfollower_rebuild_state(tpcfollower_t *server) {
   // while (tpclog_iterate_has_next(&(server->log)))
   // {
     //logentry_t *tpclog_iterate_next(tpclog_t *log, logentry_t *entry)
-    entry = tpclog_iterate_next(&(server->log), entry);
-    if (entry->type == PUTREQ)
+  if (!tpclog_iterate_has_next(&(server->log))) {
+    return -1;
+  }
+  entry = tpclog_iterate_next(&(server->log), entry);
+  if (entry->type == PUTREQ)
+  {
+    server->pending_msg = PUTREQ;
+    server->state = TPC_READY;
+    while (index < entry->length)
     {
-      server->pending_msg = PUTREQ;
-      server->state = TPC_READY;
-      while (index < entry->length)
+      if (entry->data[index] == '\0')
       {
-        if (entry->data[index] == '\0')
-        {
-          index++;
-          break;
-        }
-        server->pending_key[index] = entry->data[index];
         index++;
+        break;
       }
-      while (index < entry->length)
-      {
-        if (entry->data[index] == '\0')
-        {
-          break;
-        }
-        server->pending_value[index] = entry->data[index];
-        index++;
-      }
+      server->pending_key[index] = entry->data[index];
+      index++;
     }
+    while (index < entry->length)
+    {
+      if (entry->data[index] == '\0')
+      {
+        break;
+      }
+      server->pending_value[index] = entry->data[index];
+      index++;
+    }
+  }
   // }
   return 1;
 }
