@@ -334,15 +334,19 @@ int tpcfollower_rebuild_state(tpcfollower_t *server) {
       server->pending_key[index] = entry->data[index];
       index++;
     }
+    //printf("%s\n", server->pending_key);
+    int new = 0;
     while (index < entry->length)
     {
       if (entry->data[index] == '\0')
       {
         break;
       }
-      server->pending_value[index] = entry->data[index];
+      server->pending_value[new] = entry->data[index];
+      new++;
       index++;
     }
+    //printf("%s\n", server->pending_value);
   }
   // }
   return 1;
