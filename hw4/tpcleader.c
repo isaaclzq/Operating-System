@@ -219,6 +219,7 @@ void phase1(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *res)
 {
   int i = 0;
   int follower_fd;  
+  int vote_counter = 0;
   follower_t *follower = tpcleader_get_primary(leader, req->key);
   for (; i < leader->redundancy; i++)
   {
@@ -232,6 +233,7 @@ void phase1(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *res)
         req->type = ABORT;
         break;
       }
+      vote_counter++;
       follower = tpcleader_get_successor(leader, follower);
     } 
     else 
@@ -240,6 +242,7 @@ void phase1(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *res)
       break;
     }
   }
+  if (vote_counter != leader->redundancy) { req->type = ABORT; }
   if (res->type != ABORT) { req->type = COMMIT; }
 }
 
