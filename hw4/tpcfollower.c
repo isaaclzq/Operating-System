@@ -192,6 +192,7 @@ void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_
         memset(server->pending_key, 0, MAX_KEYLEN+1);
         server->state = TPC_COMMIT;
         res->type = ACK;
+        tpclog_clear_log(&(server->log));
       }
       else 
       {
@@ -206,6 +207,7 @@ void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_
         memset(server->pending_value, 0, MAX_VALLEN+1);
         server->state = TPC_COMMIT;
         res->type = ACK;
+        tpclog_clear_log(&(server->log));
       }
       else 
       {
@@ -225,6 +227,7 @@ void tpcfollower_handle_tpc(tpcfollower_t *server, kvrequest_t *req, kvresponse_
     memset(server->pending_key, 0, MAX_KEYLEN+1);
     server->state = TPC_ABORT;
     res->type = ACK;
+    tpclog_clear_log(&(server->log));
   }
   else if (service_type == DELREQ)
   {
@@ -279,9 +282,40 @@ void tpcfollower_handle(tpcfollower_t *server, int sockfd) {
  * KVStore has a chance to write to disk), the COMMIT will be finished upon
  * rebuild.
  */
+
+//  typedef struct {
+//   msgtype_t type;
+//   int length;
+//   char data[MAX_LOGENTRY];
+// } logentry_t;
 int tpcfollower_rebuild_state(tpcfollower_t *server) {
   /* TODO: Implement me! */
-  return -1;
+  logentry_t* entry = (logentry_t*) malloc(sizeof(logentry_t));
+  kvrequest_t* fake_request = (kvrequest_t*) malloc(sizeof(kvrequest_t));
+  kvresponse_t* fake_response = (kvresponse_t*) malloc(sizeof(kvresponse_t));
+  char* saved;
+  char* delim = '\0';
+  char* key;
+  char* value;
+  memset(fake_request, 0, sizeof(kvrequest_t));
+  memset(fake_response, 0, sizeof(kvresponse_t));
+  if (NULL == entry)
+  {
+    return -1;
+  }
+  tpclog_iterate_begin(&(server->log));
+  while (tpclog_iterate_has_next(&(server->log)))
+  {
+    //logentry_t *tpclog_iterate_next(tpclog_t *log, logentry_t *entry)
+    entry = tpclog_iterate_next(&(server->log), entry);
+    fake_request->type = entry->type;
+    key = strtok_r(entry->data, delim, &saved);
+    value = strtok_r(NULL, delim, &saved);
+    strcpy(fake_request->key, key);
+    strcpy(fake_request->val, value);
+    tpcfollower_handle_tpc(server, fake_request, fake_response);
+  }
+  return 1;
 }
 
 /* Deletes all current entries in SERVER's store and removes the store
