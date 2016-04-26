@@ -275,7 +275,7 @@ void phase2(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *res)
   else
   {
     res->type = ERROR;
-    strcpy(res->type, ERRMSG_GENERIC_ERROR);
+    strcpy(res->body, ERRMSG_GENERIC_ERROR);
   }
 }
 
