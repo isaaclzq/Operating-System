@@ -292,6 +292,10 @@ int tpcfollower_rebuild_state(tpcfollower_t *server) {
   /* TODO: Implement me! */
   logentry_t* entry = (logentry_t*) malloc(sizeof(logentry_t));
   kvrequest_t* fake_request = (kvrequest_t*) malloc(sizeof(kvrequest_t));
+  int length = 0;
+  int len1 = 0;
+  int len2 = 0;
+  int trial = 0;
   if (NULL == fake_request)
   {
     return -1;
@@ -301,10 +305,6 @@ int tpcfollower_rebuild_state(tpcfollower_t *server) {
   {
     return -1;
   }
-  char* saved;
-  char* delim = '\0';
-  char* key;
-  char* value;
   memset(fake_request, 0, sizeof(kvrequest_t));
   memset(fake_response, 0, sizeof(kvresponse_t));
   if (NULL == entry)
@@ -317,10 +317,23 @@ int tpcfollower_rebuild_state(tpcfollower_t *server) {
     //logentry_t *tpclog_iterate_next(tpclog_t *log, logentry_t *entry)
     entry = tpclog_iterate_next(&(server->log), entry);
     fake_request->type = entry->type;
-    key = strtok_r(entry->data, delim, &saved);
-    value = strtok_r(NULL, delim, &saved);
-    strcpy(fake_request->key, key);
-    strcpy(fake_request->val, value);
+    while (length < entry->length && trial < 2)
+    {
+      if (entry->data[length] == '\0' && trial == 0)
+      {
+        len1 = length;
+        trial++;
+      }
+      else if (entry->data[length] == '\0' && trial == 1)
+      {
+        len2 = length - len1;
+        trial++;
+        break;
+      }
+      length++;
+    }
+    strncpy(fake_request->key, entry->data, len1);
+    strncpy(fake_request->val, &entry->data[len1], len2);
     // tpcfollower_handle_tpc(server, fake_request, fake_response);
   }
   return 1;
