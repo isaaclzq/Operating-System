@@ -169,7 +169,6 @@ void tpcleader_handle_get(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *r
     int i = 0;
     int follower_fd;
     int byte;
-    bool received;
     follower_t *follower = tpcleader_get_primary(leader, req->key);
     for (; i < leader->redundancy; i++)
     {
@@ -177,14 +176,18 @@ void tpcleader_handle_get(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *r
       if (follower_fd != -1)
       {
         byte = kvrequest_send(req, follower_fd);
-      // if (byte == 1)
-      // {
-      //   res->type = ERROR;
-      //   strcpy(res->body, )
-      // }
-        if (kvresponse_receive(res, follower_fd) && res->body == VOTE)
+        if (byte == 1)
+        {
+          res->type = ERROR;
+          strcpy(res->body, ERRMSG_NO_KEY);
+        }
+        if (kvresponse_receive(res, follower_fd) && res->type == VOTE)
         {
           break;
+        }
+        else {
+          res->type = ERROR;
+          strcpy(res->body, ERRMSG_GENERIC_ERROR);
         }
         follower = tpcleader_get_successor(leader, follower);  
       }    
@@ -212,10 +215,14 @@ void tpcleader_handle_tpc(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *r
     return;
   }
   /* TODO: Implement me! */
+  phase1(leader, req, res);
+  phase2(leader, req, res); 
+}
+
+void phase1(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *res) 
+{
   int i = 0;
-  int follower_fd;
-  bool received;
-  msgtype_t phase1_result = COMMIT;
+  int follower_fd;  
   follower_t *follower = tpcleader_get_primary(leader, req->key);
   for (; i < leader->redundancy; i++)
   {
@@ -226,21 +233,25 @@ void tpcleader_handle_tpc(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *r
       kvresponse_receive(res, follower_fd);
       if (res->type == ABORT)
       {
-        req->type = phase1_result = ABORT;
+        req->type = ABORT;
         break;
       }
       follower = tpcleader_get_successor(leader, follower);
     } 
     else 
     {
-      req->type = phase1_result = ABORT;
+      req->type = ABORT;
       break;
     }
   }
-  if (phase1_result != ABORT){ req->type = phase1_result;}
+  if (res->type != ABORT) { req->type = COMMIT; }
+}
 
-  follower = tpcleader_get_primary(leader, req->key);
-  for (i = 0; i < leader->redundancy; i++)
+void phase2(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *res) 
+{
+  int i = 0, follower_fd = 0;
+  follower_t* follower = tpcleader_get_primary(leader, req->key);
+  for (; i < leader->redundancy; i++)
   {
     while (true)
     {

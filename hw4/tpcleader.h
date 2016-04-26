@@ -53,4 +53,7 @@ void tpcleader_handle(tpcleader_t *leader, int sockfd);
 void tpcleader_handle_get(tpcleader_t *leader, kvrequest_t *, kvresponse_t *);
 void tpcleader_handle_tpc(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *res);
 
+void phase1(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *res);
+void phase2(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *res);
+
 #endif
