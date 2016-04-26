@@ -291,31 +291,13 @@ void tpcfollower_handle(tpcfollower_t *server, int sockfd) {
 int tpcfollower_rebuild_state(tpcfollower_t *server) {
   /* TODO: Implement me! */
   logentry_t* entry = (logentry_t*) malloc(sizeof(logentry_t));
-  // kvrequest_t* fake_request = (kvrequest_t*) malloc(sizeof(kvrequest_t));
-  // int length = 0;
-  // int len1 = 0;
-  // int len2 = 0;
-  // int trial = 0;
-  // if (NULL == fake_request)
-  // {
-  //   return -1;
-  // }
-  // kvresponse_t* fake_response = (kvresponse_t*) malloc(sizeof(kvresponse_t));
-  // if (NULL == fake_response)
-  // {
-  //   return -1;
-  // }
-  // memset(fake_request, 0, sizeof(kvrequest_t));
-  // memset(fake_response, 0, sizeof(kvresponse_t));
   if (NULL == entry)
   {
     return -1;
   }
   tpclog_iterate_begin(&(server->log));
   int index = 0;
-  // while (tpclog_iterate_has_next(&(server->log)))
-  // {
-    //logentry_t *tpclog_iterate_next(tpclog_t *log, logentry_t *entry)
+  int new = 0;
   if (!tpclog_iterate_has_next(&(server->log))) {
     return -1;
   }
@@ -334,8 +316,6 @@ int tpcfollower_rebuild_state(tpcfollower_t *server) {
       server->pending_key[index] = entry->data[index];
       index++;
     }
-    //printf("%s\n", server->pending_key);
-    int new = 0;
     while (index < entry->length)
     {
       if (entry->data[index] == '\0')
@@ -346,9 +326,7 @@ int tpcfollower_rebuild_state(tpcfollower_t *server) {
       new++;
       index++;
     }
-    //printf("%s\n", server->pending_value);
   }
-  // }
   return 1;
 }
 
