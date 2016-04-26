@@ -268,7 +268,15 @@ void phase2(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *res)
     }
     follower = tpcleader_get_successor(leader, follower); 
   }
-  res->type = SUCCESS;
+  if (req->type == COMMIT)
+  {
+    res->type = SUCCESS;  
+  } 
+  else
+  {
+    res->type = ERROR;
+    strcpy(res->type, ERRMSG_GENERIC_ERROR);
+  }
 }
 
 /* Generic entrypoint for this LEADER. Takes in a socket on SOCKFD, which
