@@ -334,7 +334,7 @@ int tpcfollower_rebuild_state(tpcfollower_t *server) {
     }
     strncpy(fake_request->key, entry->data, len1);
     strncpy(fake_request->val, &entry->data[len1], len2);
-    // tpcfollower_handle_tpc(server, fake_request, fake_response);
+    tpcfollower_handle_tpc(server, fake_request, fake_response);
   }
   return 1;
 }
