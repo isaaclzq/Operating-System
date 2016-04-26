@@ -185,10 +185,6 @@ void tpcleader_handle_get(tpcleader_t *leader, kvrequest_t *req, kvresponse_t *r
         {
           break;
         }
-        else {
-          res->type = ERROR;
-          strcpy(res->body, ERRMSG_GENERIC_ERROR);
-        }
         follower = tpcleader_get_successor(leader, follower);  
       }    
     }
